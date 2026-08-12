@@ -1,0 +1,19 @@
+{
+  "name": "meridian",
+  "version": "1.0.0",
+  "description": "",
+  "scripts": {
+    "dev": "turbo run dev",
+    "build": "turbo run build",
+    "test": "turbo run test",
+    "test:e2e": "turbo run test:e2e",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+  },
+  "license": "ISC",
+  "packageManager": "pnpm@9.0.0",
+  "type": "module",
+  "devDependencies": {
+    "turbo": "^2.10.9"
+  }
+}
