@@ -1,0 +1,45 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+
+jobs:
+  ci:
+    name: format, link & test
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: "pnpm"
+
+      - name: Set up Turborepo Remote Cache
+        uses: vercel/setup-turborepo-remote-cache-action@v1.0.0
+        with:
+          team: ${{ vars.TURBO_TEAM }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+
+      - name: Format check
+        run: pnpm format --check
+
+      - name: Lint
+        run: pnpm turbo run lint
+
+      - name: Test
+        run: pnpm turbo run test
