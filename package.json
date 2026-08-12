@@ -2,6 +2,8 @@
   "name": "meridian",
   "version": "1.0.0",
   "description": "",
+  "license": "ISC",
+  "type": "module",
   "scripts": {
     "dev": "turbo run dev",
     "build": "turbo run build",
@@ -10,14 +12,15 @@
     "lint": "turbo run lint",
     "lint:fix": "turbo run lint:fix",
     "format": "turbo run format",
-    "format:fix": "turbo run format:fix"
+    "format:fix": "turbo run format:fix",
+    "prepare": "husky"
   },
-  "license": "ISC",
-  "packageManager": "pnpm@9.0.0",
-  "type": "module",
   "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^17.3.0",
     "oxfmt": "^0.63.0",
     "oxlint": "^1.78.0",
     "turbo": "^2.10.9"
-  }
+  },
+  "packageManager": "pnpm@9.0.0"
 }
