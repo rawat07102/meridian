@@ -36,7 +36,7 @@ jobs:
           TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
 
       - name: Format check
-        run: pnpm format --check
+        run: pnpm format
 
       - name: Lint
         run: pnpm turbo run lint
