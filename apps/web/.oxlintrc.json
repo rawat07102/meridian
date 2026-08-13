@@ -1,0 +1,25 @@
+{
+  "$schema": "../../node_modules/oxlint/configuration_schema.json",
+  "plugins": ["typescript", "import", "react", "nextjs"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "perf": "warn"
+  },
+  "env": {
+    "browser": true,
+    "node": true
+  },
+  "settings": {
+    "next": {
+      "rootDir": "apps/web/"
+    }
+  },
+  "ignorePatterns": [
+    "**/.next/**",
+    "**/out/**",
+    "**/build/**",
+    "next-env.d.ts",
+    "**/node_modules/**"
+  ]
+}

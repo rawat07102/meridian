@@ -11,6 +11,13 @@
       "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**", "dist/**"]
     },
     "lint": {},
+    "lint:fix": {
+      "cache": false
+    },
+    "format": {},
+    "format:fix": {
+      "cache": false
+    },
     "test": {},
     "test:e2e": {}
   },
