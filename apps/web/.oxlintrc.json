@@ -15,6 +15,15 @@
       "rootDir": "apps/web/"
     }
   },
+  "rules": {
+    "import/no-unassigned-import": [
+      "error",
+      {
+        "allow": ["**/*.css"]
+      }
+    ],
+    "react/react-in-jsx-scope": "off"
+  },
   "ignorePatterns": [
     "**/.next/**",
     "**/out/**",
