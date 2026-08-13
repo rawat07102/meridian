@@ -90,6 +90,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@vercel/related-projects':
+        specifier: ^1.1.1
+        version: 1.1.1
       next:
         specifier: 16.3.0
         version: 16.3.0(@types/node@20.19.43)(react-dom@19.2.8(react@19.2.8))(react@19.2.8)
@@ -1614,6 +1617,9 @@ packages:
     resolution: {integrity: sha512-nAB74NfSNKknqQ1RrYj6uz8FcXEomu/MATJZxh/x+BArzN2U3JbOYC0APYzUIGhVY3m5hRxA8VPNdPBoG8txlA==}
     cpu: [x64]
     os: [win32]
+
+  '@vercel/related-projects@1.1.1':
+    resolution: {integrity: sha512-Lr56tbvVXPMsBuHwAa2NEPCCLWwk+/IDMeZjrZSG1kDEztJg+bI7YPzguyPvaJrDSCEi6SEZe4U8EnxM5XdIZw==}
 
   '@webassemblyjs/ast@1.14.1':
     resolution: {integrity: sha512-nuBEDgQfm1ccRp/8bCQrx1frohyufl4JlbMMZ4P1wpeOfDhF6FQkxZJ1b/e+PLwr6X1Nhw6OLme5usuBWYBvuQ==}
@@ -5007,6 +5013,10 @@ snapshots:
 
   '@unrs/resolver-binding-win32-x64-msvc@1.12.2':
     optional: true
+
+  '@vercel/related-projects@1.1.1':
+    optionalDependencies:
+      ajv: 6.15.0
 
   '@webassemblyjs/ast@1.14.1':
     dependencies:
