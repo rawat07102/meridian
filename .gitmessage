@@ -1,0 +1,12 @@
+<type>: <short summary, imperative mood, under ~72 chars>
+
+# Optional body — 2-4 short bullets max, only if genuinely useful for
+# future git blame/log readers. Delete this template text before committing.
+#
+# Types: feat, fix, chore, refactor, test, docs
+#
+# Example:
+# feat: add task reordering via fractional indexing
+#
+# Adds position field and reorder endpoint so drag-and-drop within a
+# status column persists without renumbering other tasks.
