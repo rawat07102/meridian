@@ -11,9 +11,15 @@
   },
   "rules": {
     "no-unused-vars": "error",
-    "typescript/no-explicit-any": "off",
+    "typescript/no-explicit-any": "error",
     "typescript/no-floating-promises": "warn",
-    "typescript/no-unsafe-argument": "warn"
+    "typescript/no-unsafe-argument": "warn",
+    "typescript/no-extraneous-class": [
+      "error",
+      {
+        "allowWithDecorator": true
+      }
+    ]
   },
   "ignorePatterns": ["**/dist/**", "**/node_modules/**", "**/coverage/**"]
 }
