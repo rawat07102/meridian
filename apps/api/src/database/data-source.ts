@@ -1,7 +1,10 @@
 import { DataSource } from 'typeorm';
+import path from 'path';
 
 import dotenv from 'dotenv';
-dotenv.config();
+dotenv.config({
+  path: path.join(path.resolve(process.cwd(), '.env.local')),
+});
 
 export default new DataSource({
   type: 'postgres',
