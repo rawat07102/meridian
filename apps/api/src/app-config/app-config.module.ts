@@ -3,6 +3,7 @@ import { ConfigModule as NestConfigModule } from '@nestjs/config';
 import { validate } from './env.validation';
 import { appConfig } from './app.config';
 import { databaseConfig } from '../database/database.config';
+import { authConfig } from '../auth/config/auth.config';
 
 @Module({
   imports: [
@@ -10,7 +11,7 @@ import { databaseConfig } from '../database/database.config';
       envFilePath: '.env.local',
       isGlobal: true,
       validate,
-      load: [appConfig, databaseConfig],
+      load: [appConfig, databaseConfig, authConfig],
     }),
   ],
 })
