@@ -1,4 +1,4 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../users/users.service';
 import { SignupDto } from './dto/signup.dto';
 import * as bcrypt from 'bcryptjs';
@@ -7,6 +7,8 @@ import { User } from '../users/entities/user.entity';
 import { JwtService } from '@nestjs/jwt';
 import { Repository } from 'typeorm';
 import { RefreshToken } from './entities/refresh-token.entity';
+import { LoginDto } from './dto/login.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 
 const SALT_ROUNDS = 10;
 
@@ -15,6 +17,7 @@ export class AuthService {
   constructor(
     private readonly usersService: UsersService,
     private readonly jwtService: JwtService,
+    @InjectRepository(RefreshToken)
     private readonly refreshTokenRepository: Repository<RefreshToken>,
   ) {}
 
@@ -37,10 +40,22 @@ export class AuthService {
       passwordHash,
     });
 
-    return this.issueToken(user.id);
+    return this.issueTokens(user.id);
   }
 
-  private async issueToken(userId: User['id']) {
+  public async login(dto: LoginDto) {
+    const user = await this.usersService.findByEmail(dto.email);
+    if (!user || !user.passwordHash) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    const isValid = await bcrypt.compare(dto.password, user.passwordHash);
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid credentials');
+    }
+    return this.issueTokens(user.id);
+  }
+
+  private async issueTokens(userId: User['id']) {
     const accessToken = await this.jwtService.signAsync({ sub: userId });
 
     const rawRefreshToken = crypto.randomBytes(64).toString('hex');
