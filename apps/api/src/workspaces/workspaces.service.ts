@@ -4,8 +4,8 @@ import { Repository } from 'typeorm';
 import { WorkspaceMember, WorkspaceRole } from './entities/workspace-member.entity';
 import { Workspace } from './entities/workspace.entity';
 import { User } from '../users/entities/user.entity';
-import { UpdateWorkspaceDto } from './dtos/update-workspace.dto';
-import { CreateWorkspaceDto } from './dtos/create-workspace.dto';
+import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
+import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 
 @Injectable()
 export class WorkspacesService {
@@ -70,11 +70,9 @@ export class WorkspacesService {
   // NOTE: This method is temp minimal inline check for now,
   // it will be expanded in the future and moved to permission module
   private async assertIsAdmin(workspaceId: Workspace['id'], userId: User['id']): Promise<void> {
-    const member = await this.workspaceMemberRepository.findOne({
-      where: {
-        workspaceId,
-        userId,
-      },
+    const member = await this.workspaceMemberRepository.findOneBy({
+      workspaceId,
+      userId,
     });
     if (!member || member.role !== WorkspaceRole.ADMIN) {
       throw new ForbiddenException('Only workspace admins can perform this action');
