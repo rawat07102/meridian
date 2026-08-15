@@ -10,6 +10,7 @@ import { RefreshToken } from './entities/refresh-token.entity';
 import { LoginDto } from './dto/login.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RefreshDto } from './dto/refresh.dto';
+import { LogoutDto } from './dto/logout.dto';
 
 const SALT_ROUNDS = 10;
 
@@ -70,6 +71,11 @@ export class AuthService {
     await this.refreshTokenRepository.remove(storedToken);
 
     return this.issueTokens(storedToken.userId);
+  }
+
+  public async logout(dto: LogoutDto) {
+    const hashedRefreshToken = this.hashToken(dto.refreshToken);
+    await this.refreshTokenRepository.delete({ token: hashedRefreshToken });
   }
 
   private async issueTokens(userId: User['id']) {
