@@ -12,7 +12,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { RefreshDto } from './dto/refresh.dto';
 import { LogoutDto } from './dto/logout.dto';
 
-const SALT_ROUNDS = 10;
+const SALT_ROUNDS = 12;
 
 @Injectable()
 export class AuthService {

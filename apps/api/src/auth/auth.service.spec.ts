@@ -101,7 +101,7 @@ describe('AuthService', () => {
     });
 
     it('should throw UnauthorizedException with the same generic message when password is wrong', async () => {
-      const hashedPassword = await bcrypt.hash('correct-password', 10);
+      const hashedPassword = await bcrypt.hash('correct-password', 12);
 
       usersService.findByEmail!.mockResolvedValue({ id: 'user-id', passwordHash: hashedPassword });
 
@@ -120,7 +120,7 @@ describe('AuthService', () => {
     });
 
     it('shoulld issue tokens on succesfull login', async () => {
-      const hashedPassword = await bcrypt.hash(loginDto.password, 10);
+      const hashedPassword = await bcrypt.hash(loginDto.password, 12);
       usersService.findByEmail!.mockResolvedValue({ id: 'user-id', passwordHash: hashedPassword });
       refreshTokenRepository.save?.mockResolvedValue({});
 
