@@ -9,6 +9,7 @@ import { Repository } from 'typeorm';
 import { RefreshToken } from './entities/refresh-token.entity';
 import { LoginDto } from './dto/login.dto';
 import { InjectRepository } from '@nestjs/typeorm';
+import { RefreshDto } from './dto/refresh.dto';
 
 const SALT_ROUNDS = 10;
 
@@ -53,6 +54,22 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
     return this.issueTokens(user.id);
+  }
+
+  public async refresh(dto: RefreshDto) {
+    const hashedRefreshToken = this.hashToken(dto.refreshToken);
+
+    const storedToken = await this.refreshTokenRepository.findOne({
+      where: { token: hashedRefreshToken },
+    });
+
+    if (!storedToken || storedToken.expiresAt < new Date()) {
+      throw new UnauthorizedException('Invalid refresh token');
+    }
+
+    await this.refreshTokenRepository.remove(storedToken);
+
+    return this.issueTokens(storedToken.userId);
   }
 
   private async issueTokens(userId: User['id']) {
