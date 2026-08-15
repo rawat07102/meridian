@@ -31,7 +31,7 @@ export class AuthService {
 
     const existingUsername = await this.usersService.findByUsername(dto.username);
     if (existingUsername) {
-      throw new ConflictException('Username already in use');
+      throw new ConflictException('Username already taken');
     }
 
     const passwordHash = await bcrypt.hash(dto.password, SALT_ROUNDS);
@@ -89,6 +89,7 @@ export class AuthService {
       token: hashedRefreshToken,
       expiresAt: this.getRefreshExpiryDate(),
     });
+
     return { accessToken, refreshToken: rawRefreshToken };
   }
 
