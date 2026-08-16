@@ -4,6 +4,7 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { WorkspacesService } from './workspaces.service';
 import { Workspace } from './entities/workspace.entity';
 import { WorkspaceMember, WorkspaceRole } from './entities/workspace-member.entity';
+import { PermissionsService } from '../permissions/permissions.service';
 
 describe('WorkspacesService', () => {
   let service: WorkspacesService;
@@ -44,6 +45,10 @@ describe('WorkspacesService', () => {
         {
           provide: getRepositoryToken(WorkspaceMember),
           useValue: workspaceMemberRepository,
+        },
+        {
+          provide: PermissionsService,
+          useValue: {},
         },
       ],
     }).compile();

@@ -6,6 +6,7 @@ import { Workspace } from './entities/workspace.entity';
 import { User } from '../users/entities/user.entity';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
+import { PermissionsService } from '../permissions/permissions.service';
 
 @Injectable()
 export class WorkspacesService {
@@ -14,6 +15,7 @@ export class WorkspacesService {
     private readonly workspaceRepository: Repository<Workspace>,
     @InjectRepository(WorkspaceMember)
     private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
+    private readonly permissionsService: PermissionsService,
   ) {}
 
   async create(userId: User['id'], dto: CreateWorkspaceDto): Promise<Workspace> {
@@ -55,7 +57,7 @@ export class WorkspacesService {
     dto: UpdateWorkspaceDto,
   ): Promise<Workspace> {
     const workspace = await this.findOne(id);
-    await this.assertIsAdmin(workspace.id, userId);
+    await this.permissionsService.assertWorkspaceAdmin(userId, workspace.id);
     this.workspaceRepository.merge(workspace, dto);
     return this.workspaceRepository.save(workspace);
   }
@@ -65,17 +67,5 @@ export class WorkspacesService {
     if (workspace.ownerId !== userId)
       throw new ForbiddenException('Only the workspace owner can delete it');
     await this.workspaceRepository.remove(workspace);
-  }
-
-  // NOTE: This method is temp minimal inline check for now,
-  // it will be expanded in the future and moved to permission module
-  private async assertIsAdmin(workspaceId: Workspace['id'], userId: User['id']): Promise<void> {
-    const member = await this.workspaceMemberRepository.findOneBy({
-      workspaceId,
-      userId,
-    });
-    if (!member || member.role !== WorkspaceRole.ADMIN) {
-      throw new ForbiddenException('Only workspace admins can perform this action');
-    }
   }
 }
