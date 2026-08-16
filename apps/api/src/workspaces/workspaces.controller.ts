@@ -16,6 +16,9 @@ import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
+import { MinWorkspaceRoleRank } from '../common/decorators/min-workspace-role-rank.decorator';
+import { WorkspaceRoleGuard } from '../common/guards/workspace-role.guard';
+import { WorkspaceRole } from './entities/workspace-member.entity';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('workspaces')
@@ -32,11 +35,15 @@ export class WorkspacesController {
     return this.workspacesService.findAllForUser(user.id);
   }
 
+  @UseGuards(WorkspaceRoleGuard)
+  @MinWorkspaceRoleRank(WorkspaceRole.MEMBER)
   @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string) {
     return this.workspacesService.findOne(id);
   }
 
+  @UseGuards(WorkspaceRoleGuard)
+  @MinWorkspaceRoleRank(WorkspaceRole.ADMIN)
   @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
@@ -51,6 +58,8 @@ export class WorkspacesController {
     return this.workspacesService.remove(id, user.id);
   }
 
+  @UseGuards(WorkspaceRoleGuard)
+  @MinWorkspaceRoleRank(WorkspaceRole.ADMIN)
   @Post(':id/transfer-ownership')
   transferOwnership(
     @Param('id', ParseUUIDPipe) id: string,
@@ -60,6 +69,8 @@ export class WorkspacesController {
     return this.workspacesService.transferOwnership(id, user.id, dto.newOwnerId);
   }
 
+  @UseGuards(WorkspaceRoleGuard)
+  @MinWorkspaceRoleRank(WorkspaceRole.MEMBER)
   @Post(':id/leave')
   leave(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.workspacesService.leave(id, user.id);
