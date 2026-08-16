@@ -68,4 +68,43 @@ export class WorkspacesService {
       throw new ForbiddenException('Only the workspace owner can delete it');
     await this.workspaceRepository.remove(workspace);
   }
+
+  async transferOwnership(
+    workspaceId: Workspace['id'],
+    currentUserId: User['id'],
+    newOwnerId: User['id'],
+  ): Promise<Workspace> {
+    const workspace = await this.findOne(workspaceId);
+
+    if (workspace.ownerId !== currentUserId) {
+      throw new ForbiddenException('Only the current owner can transfer ownership');
+    }
+
+    try {
+      await this.permissionsService.assertWorkspaceAdmin(newOwnerId, workspaceId);
+    } catch {
+      throw new ForbiddenException('Workspaces can only be transferred to an Admin');
+    }
+
+    workspace.ownerId = newOwnerId;
+    return this.workspaceRepository.save(workspace);
+  }
+
+  async leave(workspaceId: Workspace['id'], userId: User['id']): Promise<void> {
+    const workspace = await this.findOne(workspaceId);
+
+    if (workspace.ownerId === userId) {
+      throw new ForbiddenException('Workspace owner must transfer ownership before leaving');
+    }
+
+    const member = await this.workspaceMemberRepository.findOne({
+      where: { userId, workspaceId },
+    });
+
+    if (!member) {
+      throw new NotFoundException('You are not a member of this workspace');
+    }
+
+    await this.workspaceMemberRepository.remove(member);
+  }
 }
