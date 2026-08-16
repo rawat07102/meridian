@@ -20,6 +20,10 @@ describe('WorkspacesService', () => {
     save: jest.Mock;
     find: jest.Mock;
     findOne: jest.Mock;
+    remove: jest.Mock;
+  };
+  let permissionsService: {
+    assertWorkspaceAdmin: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -36,6 +40,11 @@ describe('WorkspacesService', () => {
       save: jest.fn(),
       find: jest.fn(),
       findOne: jest.fn(),
+      remove: jest.fn(),
+    };
+
+    permissionsService = {
+      assertWorkspaceAdmin: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -48,7 +57,7 @@ describe('WorkspacesService', () => {
         },
         {
           provide: PermissionsService,
-          useValue: {},
+          useValue: permissionsService,
         },
       ],
     }).compile();
@@ -113,6 +122,70 @@ describe('WorkspacesService', () => {
       await service.remove('workspace-1', 'owner-id');
 
       expect(workspaceRepository.remove).toHaveBeenCalledWith(workspace);
+    });
+  });
+
+  describe('transferOwnership', () => {
+    it('should throw ForbiddenException if the caller is not the current owner', async () => {
+      const workspace = { id: 'workspace-id', ownerId: 'owner-id' };
+      workspaceRepository.findOneBy.mockResolvedValue(workspace);
+      await expect(
+        service.transferOwnership('workspace-id', 'not-the-owner', 'new-owner-id'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw ForbiddenException if the new owner is not an admin', async () => {
+      const workspace = { id: 'workspace-id', ownerId: 'owner-id' };
+
+      workspaceRepository.findOneBy.mockResolvedValue(workspace);
+      permissionsService.assertWorkspaceAdmin.mockRejectedValue(new ForbiddenException());
+      await expect(
+        service.transferOwnership('workspace-id', 'owner-id', 'non-admin-id'),
+      ).rejects.toThrow('Workspaces can only be transferred to an Admin');
+    });
+
+    it('should update the ownerId when the caller is owner and the new owner is an admin', async () => {
+      const workspace = { id: 'workspace-id', ownerId: 'owner-id' };
+      workspaceRepository.findOneBy.mockResolvedValue(workspace);
+      permissionsService.assertWorkspaceAdmin.mockResolvedValue(undefined);
+      workspaceRepository.save.mockImplementation((w) => Promise.resolve(w));
+
+      const result = await service.transferOwnership('workspace-id', 'owner-id', 'new-owner-id');
+      expect(result.ownerId).toBe('new-owner-id');
+      expect(workspaceRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({ ownerId: 'new-owner-id' }),
+      );
+    });
+  });
+
+  describe('leave', () => {
+    it('should throw ForbiddenException if the owner tries to leave', async () => {
+      const workspace = { id: 'workspace-1', ownerId: 'owner-id' };
+      workspaceRepository.findOneBy.mockResolvedValue(workspace);
+
+      await expect(service.leave('workspace-1', 'owner-id')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should throw NotFoundException if the user is not a member', async () => {
+      const workspace = { id: 'workspace-1', ownerId: 'owner-id' };
+      workspaceRepository.findOneBy.mockResolvedValue(workspace);
+      workspaceMemberRepository.findOne.mockResolvedValue(null);
+
+      await expect(service.leave('workspace-1', 'non-member-id')).rejects.toThrow(
+        NotFoundException,
+      );
+    });
+
+    it('should remove the WorkspaceMember row for a non-owner member', async () => {
+      const workspace = { id: 'workspace-1', ownerId: 'owner-id' };
+      const member = { id: 'member-1', userId: 'member-user-id', workspaceId: 'workspace-1' };
+      workspaceRepository.findOneBy.mockResolvedValue(workspace);
+      workspaceMemberRepository.findOne.mockResolvedValue(member);
+      workspaceMemberRepository.remove.mockResolvedValue(member);
+
+      await service.leave('workspace-1', 'member-user-id');
+
+      expect(workspaceMemberRepository.remove).toHaveBeenCalledWith(member);
     });
   });
 });
