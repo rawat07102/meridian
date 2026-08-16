@@ -4,11 +4,7 @@ import { WorkspaceMember, WorkspaceRole } from '../workspaces/entities/workspace
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Workspace } from '../workspaces/entities/workspace.entity';
-
-const WORKSPACE_ROLE_RANK: Readonly<Record<WorkspaceRole, number>> = Object.freeze({
-  [WorkspaceRole.ADMIN]: 2,
-  [WorkspaceRole.MEMBER]: 1,
-});
+import { WORKSPACE_ROLE_RANK } from './constants/workspace-role-rank';
 
 @Injectable()
 export class PermissionsService {
