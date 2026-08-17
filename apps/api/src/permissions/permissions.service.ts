@@ -36,4 +36,7 @@ export class PermissionsService {
     if (rank < WORKSPACE_ROLE_RANK[WorkspaceRole.MEMBER])
       throw new ForbiddenException('You are not a member of this workspace');
   }
+  async assertCanViewProject(userId: User['id'], project: Project): Promise<void> {
+    await this.assertWorkspaceMember(userId, project.workspaceId);
+  }
 }
