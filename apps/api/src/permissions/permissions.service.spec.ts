@@ -3,6 +3,8 @@ import { ForbiddenException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { PermissionsService } from './permissions.service';
 import { WorkspaceMember, WorkspaceRole } from '../workspaces/entities/workspace-member.entity';
+import { Project } from '../projects/entities/project.entity';
+import { ProjectMember } from '../projects/entities/project-member.entity';
 
 describe('PermissionsService', () => {
   let service: PermissionsService;
@@ -22,6 +24,8 @@ describe('PermissionsService', () => {
           provide: getRepositoryToken(WorkspaceMember),
           useValue: workspaceMemberRepository,
         },
+        { provide: getRepositoryToken(Project), useValue: {} },
+        { provide: getRepositoryToken(ProjectMember), useValue: {} },
       ],
     }).compile();
 
