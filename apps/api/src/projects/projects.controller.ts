@@ -103,4 +103,22 @@ export class ProjectsController {
   leave(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.projectsService.leave(id, user.id);
   }
+
+  @Post('projects/:id/labels/:labelId')
+  attachLabel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('labelId', ParseUUIDPipe) labelId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectsService.attachLabel(id, user.id, labelId);
+  }
+
+  @Delete('projects/:id/labels/:labelId')
+  detachLabel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('labelId', ParseUUIDPipe) labelId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectsService.detachLabel(id, user.id, labelId);
+  }
 }
