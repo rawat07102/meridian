@@ -17,6 +17,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { ReorderTaskDto } from './dto/reorder-task.dto';
+import { AssignTaskDto } from './dto/assign-task.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('tasks')
@@ -75,5 +76,23 @@ export class TasksController {
     @Body() dto: ReorderTaskDto,
   ) {
     return this.tasksService.reorder(id, user.id, dto);
+  }
+
+  @Post(':id/assignees')
+  assign(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+    @Body() dto: AssignTaskDto,
+  ) {
+    return this.tasksService.assign(id, user.id, dto.userId);
+  }
+
+  @Delete(':id/assignees/:userId')
+  unassign(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('userId', ParseUUIDPipe) userId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.tasksService.unassign(id, user.id, userId);
   }
 }
