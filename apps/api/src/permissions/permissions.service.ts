@@ -71,4 +71,23 @@ export class PermissionsService {
   async assertCanViewProject(userId: User['id'], project: Project): Promise<void> {
     await this.assertWorkspaceMember(userId, project.workspaceId);
   }
+
+  async assertProjectMember(userId: User['id'], project: Project): Promise<void> {
+    const isAdmin = await this.isWorkspaceAdmin(userId, project.workspaceId);
+    if (isAdmin) return;
+
+    const rank = await this.getProjectRoleRank(userId, project.id);
+    if (rank < PROJECT_ROLE_RANK[ProjectRole.MEMBER]) {
+      throw new ForbiddenException('You are not a member of this project');
+    }
+  }
+
+  async assertCanDeleteTask(userId: User['id'], project: Project): Promise<void> {
+    const isAdmin = await this.isWorkspaceAdmin(userId, project.workspaceId);
+    if (isAdmin) return;
+
+    if (project.leadId !== userId) {
+      throw new ForbiddenException('Only the project Lead or a workspace Admin can delete tasks');
+    }
+  }
 }
