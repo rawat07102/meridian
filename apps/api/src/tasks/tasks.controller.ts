@@ -20,7 +20,7 @@ import { ReorderTaskDto } from './dto/reorder-task.dto';
 import { AssignTaskDto } from './dto/assign-task.dto';
 
 @UseGuards(AuthGuard('jwt'))
-@Controller('tasks')
+@Controller()
 export class TasksController {
   constructor(private readonly tasksService: TasksService) {}
 
@@ -41,12 +41,12 @@ export class TasksController {
     return this.tasksService.findAllForProject(projectId, user.id);
   }
 
-  @Get(':id')
+  @Get('tasks/:id')
   findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.tasksService.findOne(id, user.id);
   }
 
-  @Patch(':id')
+  @Patch('tasks/:id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
@@ -55,12 +55,12 @@ export class TasksController {
     return this.tasksService.update(id, user.id, dto);
   }
 
-  @Delete(':id')
+  @Delete('tasks/:id')
   remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.tasksService.remove(id, user.id);
   }
 
-  @Patch(':id/status')
+  @Patch('tasks/:id/status')
   updateStatus(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
@@ -69,7 +69,7 @@ export class TasksController {
     return this.tasksService.updateStatus(id, user.id, dto);
   }
 
-  @Patch(':id/reorder')
+  @Patch('tasks/:id/reorder')
   reorder(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
@@ -78,7 +78,7 @@ export class TasksController {
     return this.tasksService.reorder(id, user.id, dto);
   }
 
-  @Post(':id/assignees')
+  @Post('tasks/:id/assignees')
   assign(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
@@ -87,12 +87,30 @@ export class TasksController {
     return this.tasksService.assign(id, user.id, dto.userId);
   }
 
-  @Delete(':id/assignees/:userId')
+  @Delete('tasks/:id/assignees/:userId')
   unassign(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('userId', ParseUUIDPipe) userId: string,
     @CurrentUser() user: User,
   ) {
     return this.tasksService.unassign(id, user.id, userId);
+  }
+
+  @Post('tasks/:id/labels/:labelId')
+  attachLabel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('labelId', ParseUUIDPipe) labelId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.tasksService.attachLabel(id, user.id, labelId);
+  }
+
+  @Delete('tasks/:id/labels/:labelId')
+  detachLabel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('labelId', ParseUUIDPipe) labelId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.tasksService.detachLabel(id, user.id, labelId);
   }
 }
