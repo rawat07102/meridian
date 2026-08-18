@@ -139,4 +139,12 @@ export class InviteLinksService {
       }),
     );
   }
+
+  async validateForGuestAccess(token: string): Promise<InviteLink> {
+    const link = await this.inviteLinkRepository.findOne({ where: { token } });
+    if (!link || link.expiresAt < new Date()) {
+      throw new NotFoundException('Invite link is invalid or has expired');
+    }
+    return link;
+  }
 }
