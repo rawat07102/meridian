@@ -15,6 +15,7 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { ReorderTaskDto } from './dto/reorder-task.dto';
 import { Label } from '../labels/entities/label.entity';
+import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
 
 @Injectable()
 export class TasksService {
@@ -43,17 +44,17 @@ export class TasksService {
     return this.taskRepository.save(task);
   }
 
-  async findAllForProject(projectId: Project['id'], userId: User['id']): Promise<Task[]> {
+  async findAllForProject(projectId: Project['id'], user: User | GuestJwtPayload): Promise<Task[]> {
     const project = await this.fetchProjectOrFail(projectId);
-    await this.permissionsService.assertCanViewProject(userId, project);
+    await this.permissionsService.assertCanViewProjectAsUserOrGuest(user, project);
 
     return this.taskRepository.find({ where: { projectId }, order: { position: 'ASC' } });
   }
 
-  async findOne(id: string, userId: User['id']): Promise<Task> {
+  async findOne(id: string, user: User | GuestJwtPayload): Promise<Task> {
     const task = await this.fetchTaskOrFail(id);
     const project = await this.fetchProjectOrFail(task.projectId);
-    await this.permissionsService.assertCanViewProject(userId, project);
+    await this.permissionsService.assertCanViewProjectAsUserOrGuest(user, project);
     return task;
   }
 

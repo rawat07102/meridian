@@ -22,6 +22,7 @@ import { WorkspaceRole } from './entities/workspace-member.entity';
 import { InviteLinksService } from './invite-links.service';
 import { UpdateInviteLinkExpiryDto } from './dto/update-invite-link-expiry.dto';
 import { AddInviteEmailDto } from './dto/add-invite-email.dto';
+import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('workspaces')
@@ -41,11 +42,10 @@ export class WorkspacesController {
     return this.workspacesService.findAllForUser(user.id);
   }
 
-  @UseGuards(WorkspaceRoleGuard)
-  @MinWorkspaceRoleRank(WorkspaceRole.MEMBER)
+  @UseGuards(AuthGuard(['jwt', 'guest-jwt']))
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string) {
-    return this.workspacesService.findOne(id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User | GuestJwtPayload) {
+    return this.workspacesService.findOneForUser(id, user);
   }
 
   @UseGuards(WorkspaceRoleGuard)

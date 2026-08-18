@@ -18,6 +18,7 @@ import { User } from '../users/entities/user.entity';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { ReorderTaskDto } from './dto/reorder-task.dto';
 import { AssignTaskDto } from './dto/assign-task.dto';
+import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller()
@@ -33,17 +34,19 @@ export class TasksController {
     return this.tasksService.create(projectId, user.id, dto);
   }
 
+  @UseGuards(AuthGuard(['jwt', 'guest-jwt']))
   @Get('/projects/:projectId/tasks')
   findAllForProject(
     @Param('projectId', ParseUUIDPipe) projectId: string,
-    @CurrentUser() user: User,
+    @CurrentUser() user: User | GuestJwtPayload,
   ) {
-    return this.tasksService.findAllForProject(projectId, user.id);
+    return this.tasksService.findAllForProject(projectId, user);
   }
 
+  @UseGuards(AuthGuard(['jwt', 'guest-jwt']))
   @Get('tasks/:id')
-  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.tasksService.findOne(id, user.id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User | GuestJwtPayload) {
+    return this.tasksService.findOne(id, user);
   }
 
   @Patch('tasks/:id')

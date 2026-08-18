@@ -23,6 +23,7 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectRoleGuard } from './guards/project-role.guard';
 import { ChangeLeadDto } from './dto/change-lead.dto';
 import { AddMemberDto } from './dto/add-member.dto';
+import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('projects')
@@ -47,9 +48,10 @@ export class ProjectsController {
     return this.projectsService.findAllForWorkspace(workspaceId);
   }
 
+  @UseGuards(AuthGuard(['jwt', 'guest-jwt']))
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.projectsService.findOne(id, user.id);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User | GuestJwtPayload) {
+    return this.projectsService.findOne(id, user);
   }
 
   @UseGuards(ProjectRoleGuard)

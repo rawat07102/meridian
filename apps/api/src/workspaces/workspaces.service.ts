@@ -7,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { PermissionsService } from '../permissions/permissions.service';
+import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
 
 @Injectable()
 export class WorkspacesService {
@@ -41,6 +42,15 @@ export class WorkspacesService {
         },
       },
     });
+  }
+
+  async findOneForUser(id: Workspace['id'], user: User | GuestJwtPayload): Promise<Workspace> {
+    const workspace = await this.workspaceRepository.findOneBy({
+      id,
+    });
+    if (!workspace) throw new NotFoundException('Workspace not found');
+    await this.permissionsService.assertCanViewWorkspace(user, workspace.id);
+    return workspace;
   }
 
   async findOne(id: Workspace['id']): Promise<Workspace> {

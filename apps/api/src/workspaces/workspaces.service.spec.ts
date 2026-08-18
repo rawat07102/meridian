@@ -5,6 +5,8 @@ import { WorkspacesService } from './workspaces.service';
 import { Workspace } from './entities/workspace.entity';
 import { WorkspaceMember, WorkspaceRole } from './entities/workspace-member.entity';
 import { PermissionsService } from '../permissions/permissions.service';
+import { User } from 'src/users/entities/user.entity';
+import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
 
 describe('WorkspacesService', () => {
   let service: WorkspacesService;
@@ -23,6 +25,7 @@ describe('WorkspacesService', () => {
     remove: jest.Mock;
   };
   let permissionsService: {
+    assertCanViewWorkspace: jest.Mock;
     assertWorkspaceAdmin: jest.Mock;
   };
 
@@ -44,6 +47,7 @@ describe('WorkspacesService', () => {
     };
 
     permissionsService = {
+      assertCanViewWorkspace: jest.fn(),
       assertWorkspaceAdmin: jest.fn(),
     };
 
@@ -67,6 +71,67 @@ describe('WorkspacesService', () => {
 
   afterEach(() => {
     jest.clearAllMocks();
+  });
+
+  describe('findOneForUser', () => {
+    it('should throw NotFoundException if the workspace does not exist', async () => {
+      workspaceRepository.findOneBy.mockResolvedValue(null);
+
+      await expect(
+        service.findOneForUser('nonexistent-id', { id: 'user-1' } as User),
+      ).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw ForbiddenException if a regular user is not a workspace member', async () => {
+      const workspace = { id: 'workspace-1' };
+      workspaceRepository.findOneBy.mockResolvedValue(workspace);
+      permissionsService.assertCanViewWorkspace.mockRejectedValue(
+        new ForbiddenException('You are not a member of this workspace'),
+      );
+
+      await expect(
+        service.findOneForUser('workspace-1', { id: 'non-member-id' } as User),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should return the workspace for a member', async () => {
+      const workspace = { id: 'workspace-1' };
+      workspaceRepository.findOneBy.mockResolvedValue(workspace);
+      permissionsService.assertCanViewWorkspace.mockResolvedValue(undefined);
+
+      const result = await service.findOneForUser('workspace-1', { id: 'member-id' } as User);
+
+      expect(result).toEqual(workspace);
+    });
+
+    it('should return the workspace for a guest scoped to this workspace', async () => {
+      const workspace = { id: 'workspace-1' };
+      workspaceRepository.findOneBy.mockResolvedValue(workspace);
+      permissionsService.assertCanViewWorkspace.mockResolvedValue(undefined);
+
+      const guestPayload = { role: 'guest', workspaceId: 'workspace-1' };
+      const result = await service.findOneForUser('workspace-1', guestPayload as GuestJwtPayload);
+
+      expect(result).toEqual(workspace);
+      expect(permissionsService.assertCanViewWorkspace).toHaveBeenCalledWith(
+        guestPayload,
+        'workspace-1',
+      );
+    });
+
+    it('should throw ForbiddenException for a guest scoped to a different workspace', async () => {
+      const workspace = { id: 'workspace-1' };
+      workspaceRepository.findOneBy.mockResolvedValue(workspace);
+      permissionsService.assertCanViewWorkspace.mockRejectedValue(
+        new ForbiddenException('This guest link does not grant access to this workspace'),
+      );
+
+      const guestPayload = { role: 'guest', workspaceId: 'different-workspace-id' };
+
+      await expect(
+        service.findOneForUser('workspace-1', guestPayload as GuestJwtPayload),
+      ).rejects.toThrow(ForbiddenException);
+    });
   });
 
   describe('create', () => {

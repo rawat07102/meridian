@@ -9,6 +9,8 @@ import { Project } from '../projects/entities/project.entity';
 import { ProjectMember } from '../projects/entities/project-member.entity';
 import { PROJECT_ROLE_RANK, ProjectRole } from './constants/project-role-rank';
 import { Task } from '../tasks/entities/task.entity';
+import { GuestJwtPayload } from '../auth/interfaces/guest-jwt-payload.interface';
+import { isGuestPayload } from '../auth/utils/is-guest.util';
 
 @Injectable()
 export class PermissionsService {
@@ -69,8 +71,24 @@ export class PermissionsService {
     return await this.getProjectRoleRank(userId, projectId);
   }
 
-  async assertCanViewProject(userId: User['id'], project: Project): Promise<void> {
-    await this.assertWorkspaceMember(userId, project.workspaceId);
+  async assertCanViewWorkspace(
+    requester: User | GuestJwtPayload,
+    workspaceId: Workspace['id'],
+  ): Promise<void> {
+    if (isGuestPayload(requester)) {
+      if (requester.workspaceId !== workspaceId) {
+        throw new ForbiddenException('This guest link does not grant access to this workspace');
+      }
+      return;
+    }
+    await this.assertWorkspaceMember(requester.id, workspaceId);
+  }
+
+  async assertCanViewProjectAsUserOrGuest(
+    requester: User | GuestJwtPayload,
+    project: Project,
+  ): Promise<void> {
+    return this.assertCanViewWorkspace(requester, project.workspaceId);
   }
 
   async assertProjectMember(userId: User['id'], project: Project): Promise<void> {

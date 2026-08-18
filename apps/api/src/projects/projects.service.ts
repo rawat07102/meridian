@@ -14,6 +14,7 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { PermissionsService } from '../permissions/permissions.service';
 import { Label } from '../labels/entities/label.entity';
+import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
 
 @Injectable()
 export class ProjectsService {
@@ -42,9 +43,9 @@ export class ProjectsService {
     return project;
   }
 
-  async findOne(id: string, userId: User['id']): Promise<Project> {
+  async findOne(id: string, user: User | GuestJwtPayload): Promise<Project> {
     const project = await this.fetchProjectOrFail(id);
-    await this.permissionsService.assertCanViewProject(userId, project);
+    await this.permissionsService.assertCanViewProjectAsUserOrGuest(user, project);
     return project;
   }
 
