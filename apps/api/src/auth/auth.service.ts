@@ -11,6 +11,7 @@ import { LoginDto } from './dto/login.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { RefreshDto } from './dto/refresh.dto';
 import { LogoutDto } from './dto/logout.dto';
+import { GuestJwtPayload } from './interfaces/guest-jwt-payload.interface';
 
 const SALT_ROUNDS = 12;
 
@@ -76,6 +77,12 @@ export class AuthService {
   public async logout(dto: LogoutDto) {
     const hashedRefreshToken = this.hashToken(dto.refreshToken);
     await this.refreshTokenRepository.delete({ token: hashedRefreshToken });
+  }
+
+  async issueGuestToken(workspaceId: string): Promise<{ accessToken: string }> {
+    const payload: GuestJwtPayload = { role: 'guest', workspaceId };
+    const accessToken = this.jwtService.sign(payload, { expiresIn: '7d' });
+    return { accessToken };
   }
 
   private async issueTokens(userId: User['id']) {
