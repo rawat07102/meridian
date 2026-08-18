@@ -19,7 +19,7 @@ import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
 import { MinWorkspaceRoleRank } from '../workspaces/decorators/min-workspace-role-rank.decorator';
 import { WorkspaceRoleGuard } from './guards/workspace-role.guard';
 import { WorkspaceRole } from './entities/workspace-member.entity';
-import { InviteLinksService } from './invite-link-service.service';
+import { InviteLinksService } from './invite-links.service';
 import { UpdateInviteLinkExpiryDto } from './dto/update-invite-link-expiry.dto';
 import { AddInviteEmailDto } from './dto/add-invite-email.dto';
 

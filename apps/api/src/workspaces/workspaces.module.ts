@@ -8,7 +8,7 @@ import { PermissionsModule } from '../permissions/permissions.module';
 import { WorkspaceRoleGuard } from './guards/workspace-role.guard';
 import { InviteLink } from './entities/invite-link.entity';
 import { WorkspaceInviteEmail } from './entities/workspace-invite-email.entity';
-import { InviteLinksService } from './invite-link-service.service';
+import { InviteLinksService } from './invite-links.service';
 import { InviteLinksPublicController } from './invite-links-public.controller';
 
 @Module({

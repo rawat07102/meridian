@@ -2,7 +2,7 @@ import { Controller, Get, Param, UseGuards, Post } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
 import { CurrentUser } from 'src/common/decorators/current-user.decorator';
 import { User } from 'src/users/entities/user.entity';
-import { InviteLinksService } from './invite-link-service.service';
+import { InviteLinksService } from './invite-links.service';
 
 @Controller('invite-links')
 export class InviteLinksPublicController {
