@@ -6,6 +6,8 @@ import { Project } from './entities/project.entity';
 import { ProjectMember } from './entities/project-member.entity';
 import { PermissionsService } from '../permissions/permissions.service';
 import { CreateProjectDto } from './dto/create-project.dto';
+import { User } from 'src/users/entities/user.entity';
+import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
 
 describe('ProjectsService', () => {
   let service: ProjectsService;
@@ -23,9 +25,9 @@ describe('ProjectsService', () => {
     remove: jest.Mock;
   };
   let permissionsService: {
-    assertCanViewProject: jest.Mock;
     assertWorkspaceAdmin: jest.Mock;
     assertWorkspaceMember: jest.Mock;
+    assertCanViewProjectAsUserOrGuest: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -45,7 +47,7 @@ describe('ProjectsService', () => {
     };
 
     permissionsService = {
-      assertCanViewProject: jest.fn(),
+      assertCanViewProjectAsUserOrGuest: jest.fn(),
       assertWorkspaceAdmin: jest.fn(),
       assertWorkspaceMember: jest.fn(),
     };
@@ -92,36 +94,70 @@ describe('ProjectsService', () => {
     });
   });
 
+  // Replace the old findOne describe block in projects.service.spec.ts with this.
+  // Requires permissionsService mock to include: assertCanViewProjectAsUserOrGuest: jest.Mock
+  // (in addition to the existing assertWorkspaceAdmin mock)
+
   describe('findOne', () => {
     it('should throw NotFoundException if the project does not exist', async () => {
       projectRepository.findOneBy.mockResolvedValue(null);
 
-      await expect(service.findOne('nonexistent-id', 'user-1')).rejects.toThrow(NotFoundException);
+      await expect(service.findOne('nonexistent-id', { id: 'user-1' } as User)).rejects.toThrow(
+        NotFoundException,
+      );
     });
 
-    it('should throw ForbiddenException if the user is not a workspace member', async () => {
+    it('should throw ForbiddenException if a regular user is not a workspace member', async () => {
       const project = { id: 'project-1', workspaceId: 'workspace-1' };
       projectRepository.findOneBy.mockResolvedValue(project);
-      permissionsService.assertCanViewProject.mockRejectedValue(
+      permissionsService.assertCanViewProjectAsUserOrGuest.mockRejectedValue(
         new ForbiddenException('You are not a member of this workspace'),
       );
 
-      await expect(service.findOne('project-1', 'non-member-id')).rejects.toThrow(
+      await expect(service.findOne('project-1', { id: 'non-member-id' } as User)).rejects.toThrow(
         ForbiddenException,
       );
     });
 
-    it('should return the project when the user is a workspace member', async () => {
+    it('should return the project for a workspace member', async () => {
       const project = { id: 'project-1', workspaceId: 'workspace-1' };
       projectRepository.findOneBy.mockResolvedValue(project);
-      permissionsService.assertCanViewProject.mockResolvedValue(undefined);
+      permissionsService.assertCanViewProjectAsUserOrGuest.mockResolvedValue(undefined);
 
-      const result = await service.findOne('project-1', 'member-id');
+      const result = await service.findOne('project-1', { id: 'member-id' } as User);
 
       expect(result).toEqual(project);
     });
-  });
 
+    it("should return the project for a guest scoped to the project's workspace", async () => {
+      const project = { id: 'project-1', workspaceId: 'workspace-1' };
+      projectRepository.findOneBy.mockResolvedValue(project);
+      permissionsService.assertCanViewProjectAsUserOrGuest.mockResolvedValue(undefined);
+
+      const guestPayload = { role: 'guest', workspaceId: 'workspace-1' };
+      const result = await service.findOne('project-1', guestPayload as GuestJwtPayload);
+
+      expect(result).toEqual(project);
+      expect(permissionsService.assertCanViewProjectAsUserOrGuest).toHaveBeenCalledWith(
+        guestPayload,
+        project,
+      );
+    });
+
+    it('should throw ForbiddenException for a guest scoped to a different workspace', async () => {
+      const project = { id: 'project-1', workspaceId: 'workspace-1' };
+      projectRepository.findOneBy.mockResolvedValue(project);
+      permissionsService.assertCanViewProjectAsUserOrGuest.mockRejectedValue(
+        new ForbiddenException('This guest link does not grant access to this workspace'),
+      );
+
+      const guestPayload = { role: 'guest', workspaceId: 'different-workspace-id' };
+
+      await expect(service.findOne('project-1', guestPayload as GuestJwtPayload)).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+  });
   describe('changeLead', () => {
     it('should update leadId and add the new lead as a ProjectMember if not already one', async () => {
       const project = { id: 'project-1', leadId: 'old-lead-id', workspaceId: 'workspace-1' };
