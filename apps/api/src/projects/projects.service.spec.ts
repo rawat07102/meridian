@@ -20,10 +20,12 @@ describe('ProjectsService', () => {
     create: jest.Mock;
     save: jest.Mock;
     findOneBy: jest.Mock;
+    remove: jest.Mock;
   };
   let permissionsService: {
     assertCanViewProject: jest.Mock;
     assertWorkspaceAdmin: jest.Mock;
+    assertWorkspaceMember: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -39,11 +41,13 @@ describe('ProjectsService', () => {
       create: jest.fn((data) => data),
       save: jest.fn(),
       findOneBy: jest.fn(),
+      remove: jest.fn(),
     };
 
     permissionsService = {
       assertCanViewProject: jest.fn(),
       assertWorkspaceAdmin: jest.fn(),
+      assertWorkspaceMember: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -135,6 +139,39 @@ describe('ProjectsService', () => {
     });
   });
 
+  describe('addMember', () => {
+    it('should not add if the new user is not a workspace member', async () => {
+      projectRepository.findOneBy.mockResolvedValue({ id: 'project-1' });
+      projectMemberRepository.findOneBy.mockResolvedValue(null);
+      permissionsService.assertWorkspaceMember.mockRejectedValue(
+        new ForbiddenException('You are not a member of this workspace'),
+      );
+
+      await expect(service.addMember('project-1', 'new-user-id')).rejects.toThrow(
+        ForbiddenException,
+      );
+      expect(projectMemberRepository.save).not.toHaveBeenCalled();
+    });
+
+    it('should add the new user as project member if they are a workspace member', async () => {
+      projectRepository.findOneBy.mockResolvedValue({ projectId: 'project-1' });
+      projectMemberRepository.findOneBy.mockResolvedValue(null);
+      permissionsService.assertWorkspaceMember.mockResolvedValue(undefined);
+      projectMemberRepository.save.mockImplementation((p) => Promise.resolve(p));
+
+      const result = await service.addMember('project-1', 'new-user-id');
+
+      expect(result.projectId).toBe('project-1');
+      expect(result.userId).toBe('new-user-id');
+      expect(projectMemberRepository.save).toHaveBeenCalledWith(
+        expect.objectContaining({
+          projectId: 'project-1',
+          userId: 'new-user-id',
+        }),
+      );
+    });
+  });
+
   describe('remove', () => {
     it('should throw ForbiddenException if the user is not a workspace admin', async () => {
       const project = { id: 'project-1', workspaceId: 'workspace-1' };
@@ -156,6 +193,52 @@ describe('ProjectsService', () => {
       await service.remove('project-1', 'admin-id');
 
       expect(projectRepository.remove).toHaveBeenCalledWith(project);
+    });
+  });
+
+  describe('removeMember', () => {
+    it('should throw ForbiddenException if the user is project lead', async () => {
+      const project = { id: 'project-id', leadId: 'lead-id' };
+      const member = { projectId: 'project-id', userId: 'lead-id' };
+      projectRepository.findOneBy.mockResolvedValue(project);
+      projectMemberRepository.findOneBy.mockResolvedValue(member);
+      await expect(service.removeMember('project-id', 'lead-id')).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('should remove member if user is a member', async () => {
+      const project = { id: 'project-id', leadId: 'lead-id' };
+      const member = { projectId: 'project-id', userId: 'member-id' };
+      projectRepository.findOneBy.mockResolvedValue(project);
+      projectMemberRepository.findOneBy.mockResolvedValue(member);
+      projectMemberRepository.save.mockResolvedValue({});
+
+      await service.removeMember('project-id', 'member-id');
+
+      expect(projectMemberRepository.remove).toHaveBeenCalledWith(member);
+    });
+  });
+
+  describe('leave', () => {
+    it('should throw ForbiddenException if the user is project lead', async () => {
+      const project = { id: 'project-id', leadId: 'lead-id' };
+      const member = { projectId: 'project-id', userId: 'lead-id' };
+      projectRepository.findOneBy.mockResolvedValue(project);
+      projectMemberRepository.findOneBy.mockResolvedValue(member);
+      await expect(service.leave('project-id', 'lead-id')).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should remove member if user is a member', async () => {
+      const project = { id: 'project-id', leadId: 'lead-id' };
+      const member = { projectId: 'project-id', userId: 'member-id' };
+      projectRepository.findOneBy.mockResolvedValue(project);
+      projectMemberRepository.findOneBy.mockResolvedValue(member);
+      projectMemberRepository.save.mockResolvedValue({});
+
+      await service.removeMember('project-id', 'member-id');
+
+      expect(projectMemberRepository.remove).toHaveBeenCalledWith(member);
     });
   });
 });

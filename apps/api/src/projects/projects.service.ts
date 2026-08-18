@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { ProjectMember } from './entities/project-member.entity';
@@ -41,10 +46,53 @@ export class ProjectsService {
     await this.permissionsService.assertCanViewProject(userId, project);
     return project;
   }
+
   async findAllForWorkspace(workspaceId: Workspace['id']): Promise<Project[]> {
     return await this.projectRepository.findBy({
       workspaceId,
     });
+  }
+
+  async findAllMembers(projectId: Project['id']): Promise<ProjectMember[]> {
+    await this.fetchProjectOrFail(projectId);
+    return this.projectMemberRepository.findBy({ projectId });
+  }
+
+  async addMember(projectId: Project['id'], userId: User['id']): Promise<ProjectMember> {
+    const project = await this.fetchProjectOrFail(projectId);
+    const existing = await this.projectMemberRepository.findOneBy({
+      projectId,
+      userId,
+    });
+    if (existing) throw new ConflictException('User is already a project member');
+    await this.permissionsService.assertWorkspaceMember(userId, project.workspaceId);
+    return this.projectMemberRepository.save(
+      this.projectMemberRepository.create({ projectId, userId }),
+    );
+  }
+
+  async removeMember(projectId: Project['id'], userId: User['id']) {
+    const project = await this.fetchProjectOrFail(projectId);
+    const member = await this.projectMemberRepository.findOneBy({
+      projectId,
+      userId,
+    });
+    if (!member) throw new NotFoundException('User is not a project member');
+    if (project.leadId === userId)
+      throw new ForbiddenException('Cannot remove project leader; reassign the lead first');
+    await this.projectMemberRepository.remove(member);
+  }
+
+  async leave(projectId: Project['id'], userId: User['id']) {
+    const project = await this.fetchProjectOrFail(projectId);
+    const member = await this.projectMemberRepository.findOneBy({
+      projectId,
+      userId,
+    });
+    if (!member) throw new NotFoundException('User is not a project member');
+    if (project.leadId === userId)
+      throw new ForbiddenException('Project leader must reassign leadership before leaving');
+    await this.projectMemberRepository.remove(member);
   }
 
   async update(id: Project['id'], dto: UpdateProjectDto): Promise<Project> {
