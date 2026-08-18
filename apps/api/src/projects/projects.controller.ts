@@ -104,6 +104,8 @@ export class ProjectsController {
     return this.projectsService.leave(id, user.id);
   }
 
+  @UseGuards(ProjectRoleGuard)
+  @MinProjectRoleRank(ProjectRole.LEAD)
   @Post('projects/:id/labels/:labelId')
   attachLabel(
     @Param('id', ParseUUIDPipe) id: string,
@@ -113,6 +115,8 @@ export class ProjectsController {
     return this.projectsService.attachLabel(id, user.id, labelId);
   }
 
+  @UseGuards(ProjectRoleGuard)
+  @MinProjectRoleRank(ProjectRole.LEAD)
   @Delete('projects/:id/labels/:labelId')
   detachLabel(
     @Param('id', ParseUUIDPipe) id: string,
