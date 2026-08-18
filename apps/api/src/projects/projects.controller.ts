@@ -12,11 +12,11 @@ import {
 import { AuthGuard } from '@nestjs/passport';
 import { ProjectsService } from './projects.service';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
-import { WorkspaceRoleGuard } from '../common/guards/workspace-role.guard';
+import { WorkspaceRoleGuard } from '../workspaces/guards/workspace-role.guard';
 import { User } from '../users/entities/user.entity';
 import { WorkspaceRole } from '../workspaces/entities/workspace-member.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { MinWorkspaceRoleRank } from '../common/decorators/min-workspace-role-rank.decorator';
+import { MinWorkspaceRoleRank } from '../workspaces/decorators/min-workspace-role-rank.decorator';
 import { ProjectRole } from '../permissions/constants/project-role-rank';
 import { MinProjectRoleRank } from './decorators/min-project-role-rank.decorator';
 import { UpdateProjectDto } from './dto/update-project.dto';
@@ -102,5 +102,27 @@ export class ProjectsController {
   @Post(':id/members/leave')
   leave(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.projectsService.leave(id, user.id);
+  }
+
+  @UseGuards(ProjectRoleGuard)
+  @MinProjectRoleRank(ProjectRole.LEAD)
+  @Post('projects/:id/labels/:labelId')
+  attachLabel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('labelId', ParseUUIDPipe) labelId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectsService.attachLabel(id, user.id, labelId);
+  }
+
+  @UseGuards(ProjectRoleGuard)
+  @MinProjectRoleRank(ProjectRole.LEAD)
+  @Delete('projects/:id/labels/:labelId')
+  detachLabel(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('labelId', ParseUUIDPipe) labelId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.projectsService.detachLabel(id, user.id, labelId);
   }
 }

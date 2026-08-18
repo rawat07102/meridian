@@ -10,6 +10,7 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Project } from '../../projects/entities/project.entity';
+import { Label } from '../../labels/entities/label.entity';
 
 export enum TaskStatus {
   BACKLOG = 'backlog',
@@ -74,6 +75,10 @@ export class Task {
   @ManyToMany(() => User)
   @JoinTable({ name: 'task_assignees' })
   assignees!: User[];
+
+  @ManyToMany(() => Label)
+  @JoinTable({ name: 'task_labels' })
+  labels!: Label[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

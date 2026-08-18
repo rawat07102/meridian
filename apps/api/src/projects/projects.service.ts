@@ -13,6 +13,7 @@ import { Workspace } from '../workspaces/entities/workspace.entity';
 import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { PermissionsService } from '../permissions/permissions.service';
+import { Label } from '../labels/entities/label.entity';
 
 @Injectable()
 export class ProjectsService {
@@ -111,6 +112,32 @@ export class ProjectsService {
     const project = await this.fetchProjectOrFail(id);
     await this.permissionsService.assertWorkspaceAdmin(userId, project.workspaceId);
     await this.projectRepository.remove(project);
+  }
+
+  async attachLabel(
+    projectId: Project['id'],
+    userId: User['id'],
+    labelId: string,
+  ): Promise<Project> {
+    const project = await this.fetchProjectOrFail(projectId);
+    await this.permissionsService.assertCanEditProject(userId, project);
+    const alreadyAttached = project.labels.find((l) => l.id === labelId);
+    if (!alreadyAttached) {
+      project.labels.push({ id: labelId } as Label);
+      await this.projectRepository.save(project);
+    }
+    return project;
+  }
+
+  async detachLabel(
+    projectId: Project['id'],
+    userId: User['id'],
+    labelId: string,
+  ): Promise<Project> {
+    const project = await this.fetchProjectOrFail(projectId);
+    await this.permissionsService.assertCanEditProject(userId, project);
+    project.labels = project.labels.filter((l) => l.id !== labelId);
+    return this.projectRepository.save(project);
   }
 
   private async addMemberIfNotExists(projectId: Project['id'], userId: User['id']) {

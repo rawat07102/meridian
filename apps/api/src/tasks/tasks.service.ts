@@ -14,6 +14,7 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { ReorderTaskDto } from './dto/reorder-task.dto';
+import { Label } from '../labels/entities/label.entity';
 
 @Injectable()
 export class TasksService {
@@ -140,6 +141,28 @@ export class TasksService {
     }
 
     task.assignees = task.assignees.filter((a) => a.id !== targetUserId);
+    return this.taskRepository.save(task);
+  }
+
+  async attachLabel(taskId: string, userId: User['id'], labelId: string): Promise<Task> {
+    const task = await this.fetchTaskOrFail(taskId, { labels: true });
+    const project = await this.fetchProjectOrFail(task.projectId);
+    await this.permissionsService.assertProjectMember(userId, project);
+
+    const alreadyAttached = task.labels.some((l) => l.id === labelId);
+    if (!alreadyAttached) {
+      task.labels.push({ id: labelId } as Label);
+      await this.taskRepository.save(task);
+    }
+    return task;
+  }
+
+  async detachLabel(taskId: string, userId: User['id'], labelId: string): Promise<Task> {
+    const task = await this.fetchTaskOrFail(taskId, { labels: true });
+    const project = await this.fetchProjectOrFail(task.projectId);
+    await this.permissionsService.assertProjectMember(userId, project);
+
+    task.labels = task.labels.filter((l) => l.id !== labelId);
     return this.taskRepository.save(task);
   }
 

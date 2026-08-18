@@ -83,6 +83,14 @@ export class PermissionsService {
     }
   }
 
+  async assertCanEditProject(userId: User['id'], project: Project): Promise<void> {
+    const isAdmin = await this.isWorkspaceAdmin(userId, project.workspaceId);
+    if (isAdmin) return;
+    const isLead = project.leadId === userId;
+    if (isLead) return;
+    throw new ForbiddenException('Only the project Lead or a workspace Admin can edit a project');
+  }
+
   async assertCanDeleteTask(userId: User['id'], project: Project): Promise<void> {
     const isAdmin = await this.isWorkspaceAdmin(userId, project.workspaceId);
     if (isAdmin) return;
