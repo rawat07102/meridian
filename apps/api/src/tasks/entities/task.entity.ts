@@ -1,0 +1,83 @@
+import {
+  Entity,
+  PrimaryGeneratedColumn,
+  Column,
+  ManyToOne,
+  ManyToMany,
+  JoinTable,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { User } from '../../users/entities/user.entity';
+import { Project } from '../../projects/entities/project.entity';
+
+export enum TaskStatus {
+  BACKLOG = 'backlog',
+  TODO = 'todo',
+  IN_PROGRESS = 'in_progress',
+  IN_REVIEW = 'in_review',
+  DONE = 'done',
+}
+
+export enum TaskPriority {
+  NO_PRIORITY = 'no_priority',
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent',
+}
+
+@Entity('tasks')
+export class Task {
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Column()
+  title!: string;
+
+  @Column({ type: 'text', nullable: true })
+  description!: string | null;
+
+  @Column({ type: 'varchar' })
+  status!: TaskStatus;
+
+  @Column({ type: 'varchar' })
+  priority!: TaskPriority;
+
+  @Column({ type: 'double precision' })
+  position!: number;
+
+  @Column({ name: 'due_date', type: 'date', nullable: true })
+  dueDate!: string | null;
+
+  @Column({ name: 'start_date', type: 'date', nullable: true })
+  startDate!: string | null;
+
+  @ManyToOne(() => User)
+  creator!: User;
+
+  @Column({ name: 'creator_id', type: 'uuid' })
+  creatorId!: User['id'];
+
+  @ManyToOne(() => Project)
+  project!: Project;
+
+  @Column({ name: 'project_id', type: 'uuid' })
+  projectId!: Project['id'];
+
+  @ManyToOne(() => Task, { nullable: true })
+  parentTask!: Task | null;
+
+  @Column({ name: 'parent_task_id', type: 'uuid', nullable: true })
+  parentTaskId!: Task['id'] | null;
+
+  @ManyToMany(() => User)
+  @JoinTable({ name: 'task_assignees' })
+  assignees!: User[];
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt!: Date;
+}
