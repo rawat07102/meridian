@@ -6,10 +6,13 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinTable,
+  ManyToMany,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Workspace } from '../../workspaces/entities/workspace.entity';
 import { ProjectMember } from './project-member.entity';
+import { Label } from '../../labels/entities/label.entity';
 
 export enum ProjectStatus {
   ACTIVE = 'active',
@@ -72,6 +75,10 @@ export class Project {
 
   @OneToMany(() => ProjectMember, (member) => member.project)
   members!: ProjectMember[];
+
+  @ManyToMany(() => Label)
+  @JoinTable({ name: 'project_labels' })
+  labels!: Label[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

@@ -9,6 +9,7 @@ import { WorkspacesModule } from './workspaces/workspaces.module';
 import { PermissionsModule } from './permissions/permissions.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
+import { LabelsModule } from './labels/labels.module';
 
 @Module({
   imports: [
@@ -20,6 +21,7 @@ import { TasksModule } from './tasks/tasks.module';
     PermissionsModule,
     ProjectsModule,
     TasksModule,
+    LabelsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
