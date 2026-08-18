@@ -8,15 +8,16 @@ import { PermissionsModule } from '../permissions/permissions.module';
 import { WorkspaceRoleGuard } from './guards/workspace-role.guard';
 import { InviteLink } from './entities/invite-link.entity';
 import { WorkspaceInviteEmail } from './entities/workspace-invite-email.entity';
-import { InviteLinkServiceService } from './invite-link-service/invite-link-service.service';
+import { InviteLinksService } from './invite-link-service.service';
+import { InviteLinksPublicController } from './invite-links-public.controller';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Workspace, WorkspaceMember, InviteLink, WorkspaceInviteEmail]),
     PermissionsModule,
   ],
-  providers: [WorkspacesService, WorkspaceRoleGuard, InviteLinkServiceService],
-  controllers: [WorkspacesController],
+  providers: [WorkspacesService, WorkspaceRoleGuard, InviteLinksService],
+  controllers: [WorkspacesController, InviteLinksPublicController],
   exports: [],
 })
 export class WorkspacesModule {}

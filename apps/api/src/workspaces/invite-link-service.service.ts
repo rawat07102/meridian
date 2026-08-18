@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  ConflictException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
@@ -6,6 +11,7 @@ import { InviteLink } from './entities/invite-link.entity';
 import { WorkspaceInviteEmail } from './entities/workspace-invite-email.entity';
 import { Workspace } from '../workspaces/entities/workspace.entity';
 import { User } from '../users/entities/user.entity';
+import { WorkspaceMember, WorkspaceRole } from './entities/workspace-member.entity';
 
 const DEFAULT_EXPIRY_DAYS = 30;
 
@@ -16,6 +22,8 @@ export class InviteLinksService {
     private readonly inviteLinkRepository: Repository<InviteLink>,
     @InjectRepository(WorkspaceInviteEmail)
     private readonly inviteEmailRepository: Repository<WorkspaceInviteEmail>,
+    @InjectRepository(WorkspaceMember)
+    private readonly workspaceMemberRepository: Repository<WorkspaceMember>,
   ) {}
 
   async createOrRegenerate(
@@ -75,5 +83,60 @@ export class InviteLinksService {
     });
     if (!email) throw new NotFoundException('Invited email not found');
     await this.inviteEmailRepository.remove(email);
+  }
+
+  async resolveToken(token: string): Promise<{ workspaceId: string; workspaceName: string }> {
+    const link = await this.inviteLinkRepository.findOne({
+      where: { token },
+      relations: {
+        workspace: true,
+      },
+    });
+
+    if (!link || link.expiresAt < new Date()) {
+      throw new NotFoundException('Invite link is invalid or has expired');
+    }
+
+    return {
+      workspaceId: link.workspaceId,
+      workspaceName: link.workspace.name,
+    };
+  }
+
+  async join(token: string, user: User): Promise<WorkspaceMember> {
+    const link = await this.inviteLinkRepository.findOne({ where: { token } });
+    if (!link || link.expiresAt < new Date()) {
+      throw new NotFoundException('Invite link is invalid or has expired');
+    }
+
+    const invitedEmail = await this.inviteEmailRepository.findOne({
+      where: { inviteLinkId: link.id, email: user.email },
+    });
+
+    if (!invitedEmail) {
+      throw new ForbiddenException('This email is not invited to join this workspace');
+    }
+
+    if (invitedEmail.acceptedByUserId) {
+      throw new ConflictException('This invite has already been used');
+    }
+
+    const existingMembership = await this.workspaceMemberRepository.findOne({
+      where: { userId: user.id, workspaceId: link.workspaceId },
+    });
+    if (existingMembership) {
+      throw new ConflictException('You are already a member of this workspace');
+    }
+
+    invitedEmail.acceptedByUserId = user.id;
+    await this.inviteEmailRepository.save(invitedEmail);
+
+    return this.workspaceMemberRepository.save(
+      this.workspaceMemberRepository.create({
+        userId: user.id,
+        workspaceId: link.workspaceId,
+        role: WorkspaceRole.MEMBER,
+      }),
+    );
   }
 }
