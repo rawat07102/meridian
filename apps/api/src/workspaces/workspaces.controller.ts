@@ -16,8 +16,8 @@ import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
-import { MinWorkspaceRoleRank } from '../common/decorators/min-workspace-role-rank.decorator';
-import { WorkspaceRoleGuard } from '../common/guards/workspace-role.guard';
+import { MinWorkspaceRoleRank } from '../workspaces/decorators/min-workspace-role-rank.decorator';
+import { WorkspaceRoleGuard } from './guards/workspace-role.guard';
 import { WorkspaceRole } from './entities/workspace-member.entity';
 
 @UseGuards(AuthGuard('jwt'))
