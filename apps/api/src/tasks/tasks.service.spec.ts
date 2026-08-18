@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { ForbiddenException, NotFoundException } from '@nestjs/common';
+import { ConflictException, ForbiddenException, NotFoundException } from '@nestjs/common';
 import { getRepositoryToken } from '@nestjs/typeorm';
 import { TasksService } from './tasks.service';
 import { Task, TaskStatus } from './entities/task.entity';
@@ -23,6 +23,7 @@ describe('TasksService', () => {
     assertProjectMember: jest.Mock;
     assertCanViewProject: jest.Mock;
     assertCanDeleteTask: jest.Mock;
+    assertCanAssignTask: jest.Mock;
   };
 
   beforeEach(async () => {
@@ -42,6 +43,7 @@ describe('TasksService', () => {
       assertProjectMember: jest.fn(),
       assertCanViewProject: jest.fn(),
       assertCanDeleteTask: jest.fn(),
+      assertCanAssignTask: jest.fn(),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -242,6 +244,150 @@ describe('TasksService', () => {
       });
 
       expect(result.status).toBe(TaskStatus.IN_REVIEW);
+    });
+  });
+
+  describe('assign', () => {
+    const baseTask = {
+      id: 'task-1',
+      projectId: 'project-1',
+      creatorId: 'creator-id',
+      assignees: [],
+    };
+
+    beforeEach(() => {
+      projectRepository.findOne.mockResolvedValue({ id: 'project-1', leadId: 'lead-id' });
+      taskRepository.save.mockImplementation((t) => Promise.resolve(t));
+    });
+
+    it('should allow a project member to self-assign', async () => {
+      taskRepository.findOne.mockResolvedValue({ ...baseTask, assignees: [] });
+      permissionsService.assertProjectMember.mockResolvedValue(undefined);
+
+      const result = await service.assign('task-1', 'member-id', 'member-id');
+
+      expect(permissionsService.assertProjectMember).toHaveBeenCalled();
+      expect(permissionsService.assertCanAssignTask).not.toHaveBeenCalled();
+      expect(result.assignees.some((a: { id: string }) => a.id === 'member-id')).toBe(true);
+    });
+
+    it('should throw ForbiddenException if a regular member tries to assign someone else', async () => {
+      taskRepository.findOne.mockResolvedValue({ ...baseTask, assignees: [] });
+      permissionsService.assertCanAssignTask.mockRejectedValue(
+        new ForbiddenException(
+          'Only the task creator, project Lead, or workspace Admin can assign or unassign other users',
+        ),
+      );
+
+      await expect(
+        service.assign('task-1', 'regular-member-id', 'someone-else-id'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should allow the creator to assign someone else', async () => {
+      taskRepository.findOne.mockResolvedValue({ ...baseTask, assignees: [] });
+      permissionsService.assertCanAssignTask.mockResolvedValue(undefined);
+
+      const result = await service.assign('task-1', 'creator-id', 'other-user-id');
+
+      expect(result.assignees.some((a: { id: string }) => a.id === 'other-user-id')).toBe(true);
+    });
+
+    it('should allow the Lead to assign someone else', async () => {
+      taskRepository.findOne.mockResolvedValue({ ...baseTask, assignees: [] });
+      permissionsService.assertCanAssignTask.mockResolvedValue(undefined);
+
+      const result = await service.assign('task-1', 'lead-id', 'other-user-id');
+
+      expect(result.assignees.some((a: { id: string }) => a.id === 'other-user-id')).toBe(true);
+    });
+
+    it('should throw ConflictException if the user is already assigned', async () => {
+      taskRepository.findOne.mockResolvedValue({
+        ...baseTask,
+        assignees: [{ id: 'already-assigned-id' }],
+      });
+      permissionsService.assertCanAssignTask.mockResolvedValue(undefined);
+
+      await expect(service.assign('task-1', 'creator-id', 'already-assigned-id')).rejects.toThrow(
+        ConflictException,
+      );
+    });
+  });
+
+  describe('unassign', () => {
+    const baseTask = {
+      id: 'task-1',
+      projectId: 'project-1',
+      creatorId: 'creator-id',
+    };
+
+    beforeEach(() => {
+      projectRepository.findOne.mockResolvedValue({ id: 'project-1', leadId: 'lead-id' });
+      taskRepository.save.mockImplementation((t) => Promise.resolve(t));
+    });
+
+    it('should throw ForbiddenException if the creator tries to unassign themselves', async () => {
+      taskRepository.findOne.mockResolvedValue({
+        ...baseTask,
+        assignees: [{ id: 'creator-id' }],
+      });
+
+      await expect(service.unassign('task-1', 'creator-id', 'creator-id')).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+
+    it('should allow a self-assigned (non-creator) user to unassign themselves', async () => {
+      taskRepository.findOne.mockResolvedValue({
+        ...baseTask,
+        assignees: [{ id: 'self-assigned-id' }],
+      });
+
+      const result = await service.unassign('task-1', 'self-assigned-id', 'self-assigned-id');
+
+      expect(result.assignees.some((a: { id: string }) => a.id === 'self-assigned-id')).toBe(false);
+    });
+
+    it('should allow a user assigned by someone else to unassign themselves', async () => {
+      taskRepository.findOne.mockResolvedValue({
+        ...baseTask,
+        assignees: [{ id: 'assigned-by-lead-id' }],
+      });
+
+      const result = await service.unassign('task-1', 'assigned-by-lead-id', 'assigned-by-lead-id');
+
+      expect(result.assignees.some((a: { id: string }) => a.id === 'assigned-by-lead-id')).toBe(
+        false,
+      );
+    });
+
+    it('should throw ForbiddenException if a regular member tries to unassign someone else', async () => {
+      taskRepository.findOne.mockResolvedValue({
+        ...baseTask,
+        assignees: [{ id: 'other-user-id' }],
+      });
+      permissionsService.assertCanAssignTask.mockRejectedValue(
+        new ForbiddenException(
+          'Only the task creator, project Lead, or workspace Admin can assign or unassign other users',
+        ),
+      );
+
+      await expect(
+        service.unassign('task-1', 'regular-member-id', 'other-user-id'),
+      ).rejects.toThrow(ForbiddenException);
+    });
+
+    it('should allow the creator to unassign someone else', async () => {
+      taskRepository.findOne.mockResolvedValue({
+        ...baseTask,
+        assignees: [{ id: 'other-user-id' }],
+      });
+      permissionsService.assertCanAssignTask.mockResolvedValue(undefined);
+
+      const result = await service.unassign('task-1', 'creator-id', 'other-user-id');
+
+      expect(result.assignees.some((a: { id: string }) => a.id === 'other-user-id')).toBe(false);
     });
   });
 });

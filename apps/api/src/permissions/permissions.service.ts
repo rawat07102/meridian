@@ -8,6 +8,7 @@ import { WORKSPACE_ROLE_RANK } from './constants/workspace-role-rank';
 import { Project } from '../projects/entities/project.entity';
 import { ProjectMember } from '../projects/entities/project-member.entity';
 import { PROJECT_ROLE_RANK, ProjectRole } from './constants/project-role-rank';
+import { Task } from '../tasks/entities/task.entity';
 
 @Injectable()
 export class PermissionsService {
@@ -88,6 +89,20 @@ export class PermissionsService {
 
     if (project.leadId !== userId) {
       throw new ForbiddenException('Only the project Lead or a workspace Admin can delete tasks');
+    }
+  }
+
+  async assertCanAssignTask(userId: User['id'], task: Task, project: Project): Promise<void> {
+    const isAdmin = await this.isWorkspaceAdmin(userId, project.workspaceId);
+    if (isAdmin) return;
+
+    const isLead = project.leadId === userId;
+    const isCreator = task.creatorId === userId;
+
+    if (!isLead && !isCreator) {
+      throw new ForbiddenException(
+        'Only the task creator, project Lead, or workspace Admin can assign or unassign other users',
+      );
     }
   }
 }

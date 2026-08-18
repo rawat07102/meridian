@@ -1,6 +1,11 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { FindOptionsRelations, Repository } from 'typeorm';
 import { Task, TaskStatus } from './entities/task.entity';
 import { Project } from '../projects/entities/project.entity';
 import { User } from '../users/entities/user.entity';
@@ -96,6 +101,48 @@ export class TasksService {
     return this.taskRepository.save(task);
   }
 
+  async assign(taskId: string, actingUserId: User['id'], targetUserId: User['id']): Promise<Task> {
+    const task = await this.fetchTaskOrFail(taskId, { assignees: true });
+    const project = await this.fetchProjectOrFail(task.projectId);
+
+    const isSelfAssign = actingUserId === targetUserId;
+    if (!isSelfAssign) {
+      await this.permissionsService.assertCanAssignTask(actingUserId, task, project);
+    } else {
+      await this.permissionsService.assertProjectMember(actingUserId, project);
+    }
+
+    const alreadyAssigned = task.assignees.some((a) => a.id === targetUserId);
+    if (alreadyAssigned) throw new ConflictException('User is already assigned to this task');
+
+    task.assignees.push({ id: targetUserId } as User);
+    return this.taskRepository.save(task);
+  }
+
+  async unassign(
+    taskId: string,
+    actingUserId: User['id'],
+    targetUserId: User['id'],
+  ): Promise<Task> {
+    const task = await this.fetchTaskOrFail(taskId, {
+      assignees: true,
+    });
+    const project = await this.fetchProjectOrFail(task.projectId);
+
+    const isSelfUnassign = actingUserId === targetUserId;
+
+    if (isSelfUnassign) {
+      if (task.creatorId === actingUserId) {
+        throw new ForbiddenException('The creator cannot unassign themselves from their own task');
+      }
+    } else {
+      await this.permissionsService.assertCanAssignTask(actingUserId, task, project);
+    }
+
+    task.assignees = task.assignees.filter((a) => a.id !== targetUserId);
+    return this.taskRepository.save(task);
+  }
+
   private async calculatePosition(
     prevTaskId: string | undefined,
     nextTaskId: string | undefined,
@@ -113,12 +160,14 @@ export class TasksService {
     return (prevTask.position + nextTask.position) / 2; // moved between two
   }
 
-  private async fetchTaskOrFail(id: string): Promise<Task> {
-    const task = await this.taskRepository.findOne({ where: { id } });
+  private async fetchTaskOrFail(
+    id: string,
+    relations: FindOptionsRelations<Task> = {},
+  ): Promise<Task> {
+    const task = await this.taskRepository.findOne({ where: { id }, relations });
     if (!task) throw new NotFoundException('Task not found');
     return task;
   }
-
   private async fetchProjectOrFail(id: string): Promise<Project> {
     const project = await this.projectRepository.findOne({ where: { id } });
     if (!project) throw new NotFoundException('Project not found');
