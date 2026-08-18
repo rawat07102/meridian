@@ -19,11 +19,17 @@ import { TransferOwnershipDto } from './dto/transfer-ownership.dto';
 import { MinWorkspaceRoleRank } from '../workspaces/decorators/min-workspace-role-rank.decorator';
 import { WorkspaceRoleGuard } from './guards/workspace-role.guard';
 import { WorkspaceRole } from './entities/workspace-member.entity';
+import { InviteLinksService } from './invite-links.service';
+import { UpdateInviteLinkExpiryDto } from './dto/update-invite-link-expiry.dto';
+import { AddInviteEmailDto } from './dto/add-invite-email.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('workspaces')
 export class WorkspacesController {
-  constructor(private readonly workspacesService: WorkspacesService) {}
+  constructor(
+    private readonly workspacesService: WorkspacesService,
+    private readonly inviteLinksService: InviteLinksService,
+  ) {}
 
   @Post()
   create(@CurrentUser() user: User, @Body() dto: CreateWorkspaceDto) {
@@ -74,5 +80,67 @@ export class WorkspacesController {
   @Post(':id/leave')
   leave(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.workspacesService.leave(id, user.id);
+  }
+
+  // Invite Link Routes
+  @UseGuards(WorkspaceRoleGuard)
+  @MinWorkspaceRoleRank(WorkspaceRole.ADMIN)
+  @Post(':workspaceId/invite-link')
+  createOrRegenerateInviteLink(
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.inviteLinksService.createOrRegenerate(workspaceId, user.id);
+  }
+
+  @UseGuards(WorkspaceRoleGuard)
+  @MinWorkspaceRoleRank(WorkspaceRole.ADMIN)
+  @Get(':workspaceId/invite-link')
+  getInviteLink(@Param('workspaceId', ParseUUIDPipe) workspaceId: string) {
+    return this.inviteLinksService.findCurrent(workspaceId);
+  }
+
+  @UseGuards(WorkspaceRoleGuard)
+  @MinWorkspaceRoleRank(WorkspaceRole.ADMIN)
+  @Patch(':workspaceId/invite-link')
+  updateInviteLinkExpiry(
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+    @Body() dto: UpdateInviteLinkExpiryDto,
+  ) {
+    return this.inviteLinksService.updateExpiry(workspaceId, new Date(dto.expiresAt));
+  }
+
+  @UseGuards(WorkspaceRoleGuard)
+  @MinWorkspaceRoleRank(WorkspaceRole.ADMIN)
+  @Delete(':workspaceId/invite-link')
+  revokeInviteLink(@Param('workspaceId', ParseUUIDPipe) workspaceId: string) {
+    return this.inviteLinksService.revoke(workspaceId);
+  }
+
+  @UseGuards(WorkspaceRoleGuard)
+  @MinWorkspaceRoleRank(WorkspaceRole.ADMIN)
+  @Post(':workspaceId/invite-emails')
+  addInviteEmail(
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+    @Body() dto: AddInviteEmailDto,
+  ) {
+    return this.inviteLinksService.addEmail(workspaceId, dto.email);
+  }
+
+  @UseGuards(WorkspaceRoleGuard)
+  @MinWorkspaceRoleRank(WorkspaceRole.ADMIN)
+  @Get(':workspaceId/invite-emails')
+  getInviteEmails(@Param('workspaceId', ParseUUIDPipe) workspaceId: string) {
+    return this.inviteLinksService.findEmails(workspaceId);
+  }
+
+  @UseGuards(WorkspaceRoleGuard)
+  @MinWorkspaceRoleRank(WorkspaceRole.ADMIN)
+  @Delete(':workspaceId/invite-emails/:emailId')
+  removeInviteEmail(
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+    @Param('emailId', ParseUUIDPipe) emailId: string,
+  ) {
+    return this.inviteLinksService.removeEmail(workspaceId, emailId);
   }
 }
