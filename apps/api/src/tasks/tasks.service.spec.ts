@@ -133,4 +133,115 @@ describe('TasksService', () => {
       expect(taskRepository.remove).toHaveBeenCalledWith(task);
     });
   });
+
+  describe('updateStatus', () => {
+    it('should update status and append to the end of the new status column', async () => {
+      const task = { id: 'task-1', projectId: 'project-1', status: TaskStatus.TODO, position: 500 };
+      taskRepository.findOne
+        .mockResolvedValueOnce(task) // fetchTaskOrFail
+        .mockResolvedValueOnce({ position: 2000 }); // getNextPosition lookup in IN_PROGRESS column
+      projectRepository.findOne.mockResolvedValue({ id: 'project-1' });
+      permissionsService.assertProjectMember.mockResolvedValue(undefined);
+      taskRepository.save.mockImplementation((t) => Promise.resolve(t));
+
+      const result = await service.updateStatus('task-1', 'user-1', {
+        status: TaskStatus.IN_PROGRESS,
+      });
+
+      expect(result.status).toBe(TaskStatus.IN_PROGRESS);
+      expect(result.position).toBe(3000);
+    });
+
+    it('should set position to 1000 if the new status column is empty', async () => {
+      const task = { id: 'task-1', projectId: 'project-1', status: TaskStatus.TODO, position: 500 };
+      taskRepository.findOne.mockResolvedValueOnce(task).mockResolvedValueOnce(null); // no tasks in target column yet
+      projectRepository.findOne.mockResolvedValue({ id: 'project-1' });
+      permissionsService.assertProjectMember.mockResolvedValue(undefined);
+      taskRepository.save.mockImplementation((t) => Promise.resolve(t));
+
+      const result = await service.updateStatus('task-1', 'user-1', {
+        status: TaskStatus.DONE,
+      });
+
+      expect(result.position).toBe(1000);
+    });
+  });
+
+  describe('reorder', () => {
+    const baseTask = {
+      id: 'task-1',
+      projectId: 'project-1',
+      status: TaskStatus.TODO,
+      position: 500,
+    };
+
+    beforeEach(() => {
+      projectRepository.findOne.mockResolvedValue({ id: 'project-1' });
+      permissionsService.assertProjectMember.mockResolvedValue(undefined);
+      taskRepository.save.mockImplementation((t) => Promise.resolve(t));
+    });
+
+    it('should set position to 1000 when moved into an empty column', async () => {
+      taskRepository.findOne.mockResolvedValueOnce(baseTask); // fetchTaskOrFail
+
+      const result = await service.reorder('task-1', 'user-1', {
+        newStatus: TaskStatus.DONE,
+      });
+
+      expect(result.position).toBe(1000);
+    });
+
+    it('should set position to nextTask.position - 1000 when moved to the top', async () => {
+      taskRepository.findOne
+        .mockResolvedValueOnce(baseTask) // fetchTaskOrFail
+        .mockResolvedValueOnce(null) // prevTask lookup (none)
+        .mockResolvedValueOnce({ position: 2000 }); // nextTask lookup
+
+      const result = await service.reorder('task-1', 'user-1', {
+        newStatus: TaskStatus.DONE,
+        nextTaskId: 'next-task-id',
+      });
+
+      expect(result.position).toBe(1000); // 2000 - 1000
+    });
+
+    it('should set position to prevTask.position + 1000 when moved to the bottom', async () => {
+      taskRepository.findOne
+        .mockResolvedValueOnce(baseTask) // fetchTaskOrFail
+        .mockResolvedValueOnce({ position: 2000 }) // prevTask lookup
+        .mockResolvedValueOnce(null); // nextTask lookup (none)
+
+      const result = await service.reorder('task-1', 'user-1', {
+        newStatus: TaskStatus.DONE,
+        prevTaskId: 'prev-task-id',
+      });
+
+      expect(result.position).toBe(3000); // 2000 + 1000
+    });
+
+    it('should set position to the midpoint when moved between two tasks', async () => {
+      taskRepository.findOne
+        .mockResolvedValueOnce(baseTask) // fetchTaskOrFail
+        .mockResolvedValueOnce({ position: 2000 }) // prevTask lookup
+        .mockResolvedValueOnce({ position: 3000 }); // nextTask lookup
+
+      const result = await service.reorder('task-1', 'user-1', {
+        newStatus: TaskStatus.DONE,
+        prevTaskId: 'prev-task-id',
+        nextTaskId: 'next-task-id',
+      });
+
+      expect(result.position).toBe(2500); // (2000 + 3000) / 2
+    });
+
+    it('should update status alongside position', async () => {
+      taskRepository.findOne.mockResolvedValueOnce(baseTask);
+
+      const result = await service.reorder('task-1', 'user-1', {
+        newStatus: TaskStatus.IN_REVIEW,
+      });
+
+      expect(result.status).toBe(TaskStatus.IN_REVIEW);
+    });
+  });
 });

@@ -15,6 +15,8 @@ import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import { User } from '../users/entities/user.entity';
+import { UpdateStatusDto } from './dto/update-status.dto';
+import { ReorderTaskDto } from './dto/reorder-task.dto';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('tasks')
@@ -38,12 +40,12 @@ export class TasksController {
     return this.tasksService.findAllForProject(projectId, user.id);
   }
 
-  @Get('tasks/:id')
+  @Get(':id')
   findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.tasksService.findOne(id, user.id);
   }
 
-  @Patch('tasks/:id')
+  @Patch(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @CurrentUser() user: User,
@@ -52,8 +54,26 @@ export class TasksController {
     return this.tasksService.update(id, user.id, dto);
   }
 
-  @Delete('tasks/:id')
+  @Delete(':id')
   remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.tasksService.remove(id, user.id);
+  }
+
+  @Patch(':id/status')
+  updateStatus(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+    @Body() dto: UpdateStatusDto,
+  ) {
+    return this.tasksService.updateStatus(id, user.id, dto);
+  }
+
+  @Patch(':id/reorder')
+  reorder(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+    @Body() dto: ReorderTaskDto,
+  ) {
+    return this.tasksService.reorder(id, user.id, dto);
   }
 }

@@ -7,6 +7,8 @@ import { User } from '../users/entities/user.entity';
 import { PermissionsService } from '../permissions/permissions.service';
 import { CreateTaskDto } from './dto/create-task.dto';
 import { UpdateTaskDto } from './dto/update-task.dto';
+import { UpdateStatusDto } from './dto/update-status.dto';
+import { ReorderTaskDto } from './dto/reorder-task.dto';
 
 @Injectable()
 export class TasksService {
@@ -58,6 +60,19 @@ export class TasksService {
     this.taskRepository.merge(task, dto);
     return this.taskRepository.save(task);
   }
+
+  async updateStatus(id: string, userId: User['id'], dto: UpdateStatusDto): Promise<Task> {
+    const task = await this.fetchTaskOrFail(id);
+    const project = await this.fetchProjectOrFail(task.projectId);
+
+    await this.permissionsService.assertProjectMember(userId, project);
+
+    task.status = dto.status;
+    task.position = await this.getNextPosition(task.projectId, dto.status);
+
+    return this.taskRepository.save(task);
+  }
+
   async remove(id: string, userId: User['id']): Promise<void> {
     const task = await this.fetchTaskOrFail(id);
     const project = await this.fetchProjectOrFail(task.projectId);
@@ -65,6 +80,37 @@ export class TasksService {
     await this.permissionsService.assertCanDeleteTask(userId, project);
 
     await this.taskRepository.remove(task);
+  }
+
+  async reorder(id: string, userId: User['id'], dto: ReorderTaskDto): Promise<Task> {
+    const task = await this.fetchTaskOrFail(id);
+    const project = await this.fetchProjectOrFail(task.projectId);
+
+    await this.permissionsService.assertProjectMember(userId, project);
+
+    const newPosition = await this.calculatePosition(dto.prevTaskId, dto.nextTaskId);
+
+    task.status = dto.newStatus;
+    task.position = newPosition;
+
+    return this.taskRepository.save(task);
+  }
+
+  private async calculatePosition(
+    prevTaskId: string | undefined,
+    nextTaskId: string | undefined,
+  ): Promise<number> {
+    const prevTask = prevTaskId
+      ? await this.taskRepository.findOne({ where: { id: prevTaskId } })
+      : null;
+    const nextTask = nextTaskId
+      ? await this.taskRepository.findOne({ where: { id: nextTaskId } })
+      : null;
+
+    if (!prevTask && !nextTask) return 1000; // empty column
+    if (!prevTask) return nextTask!.position - 1000; // moved to top
+    if (!nextTask) return prevTask.position + 1000; // moved to bottom
+    return (prevTask.position + nextTask.position) / 2; // moved between two
   }
 
   private async fetchTaskOrFail(id: string): Promise<Task> {
