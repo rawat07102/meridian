@@ -9,7 +9,9 @@ export default function Home() {
 
   const handleLoginAsGuest = async () => {
     await loginAsGuest();
-    router.push('/');
+    if (session?.type === 'guest') {
+      router.push(`/workspace/${session.workspaceId}`);
+    }
   };
 
   return (

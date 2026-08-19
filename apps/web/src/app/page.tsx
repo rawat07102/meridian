@@ -13,5 +13,9 @@ export default function Home() {
     return <p>Loading...</p>;
   }
 
-  return <main>{session && <p>{JSON.stringify(session, null, 2)}</p>}</main>;
+  if (session?.type === 'guest') {
+    return redirect(`/workspace/${session.workspaceId}`);
+  }
+
+  return redirect(`/workspace/mock-workspace-id`);
 }
