@@ -1,3 +1,17 @@
+'use client';
+import { useAuth } from '@/features/auth/contexts/auth-session.context';
+import { redirect } from 'next/navigation';
+
 export default function Home() {
-  return <h1>{process.env.NEXT_PUBLIC_API_URL}</h1>;
+  const { isLoading, session, isAuthenticated } = useAuth();
+
+  if (!isLoading && !isAuthenticated) {
+    return redirect('/login');
+  }
+
+  if (isLoading) {
+    return <p>Loading...</p>;
+  }
+
+  return <main>{session && <p>{JSON.stringify(session, null, 2)}</p>}</main>;
 }
