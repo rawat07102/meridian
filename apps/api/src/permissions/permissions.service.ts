@@ -11,6 +11,7 @@ import { PROJECT_ROLE_RANK, ProjectRole } from './constants/project-role-rank';
 import { Task } from '../tasks/entities/task.entity';
 import { GuestJwtPayload } from '../auth/interfaces/guest-jwt-payload.interface';
 import { isGuestPayload } from '../auth/utils/is-guest.util';
+import { Comment } from 'src/comments/entities/comment.entity';
 
 @Injectable()
 export class PermissionsService {
@@ -116,6 +117,22 @@ export class PermissionsService {
     if (project.leadId !== userId) {
       throw new ForbiddenException('Only the project Lead or a workspace Admin can delete tasks');
     }
+  }
+
+  async assertCanDeleteComment(
+    userId: User['id'],
+    project: Project,
+    comment: Comment,
+  ): Promise<void> {
+    const isAdmin = await this.isWorkspaceAdmin(userId, project.workspaceId);
+
+    if (isAdmin) return;
+    if (project.leadId === userId) return;
+    if (comment.authorId === userId) return;
+
+    throw new ForbiddenException(
+      'Only the comment author, project Lead or a workspace Admin can delete comments',
+    );
   }
 
   async assertCanAssignTask(userId: User['id'], task: Task, project: Project): Promise<void> {
