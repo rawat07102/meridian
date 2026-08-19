@@ -10,6 +10,7 @@ import { PermissionsModule } from './permissions/permissions.module';
 import { ProjectsModule } from './projects/projects.module';
 import { TasksModule } from './tasks/tasks.module';
 import { LabelsModule } from './labels/labels.module';
+import { CommentsModule } from './comments/comments.module';
 
 @Module({
   imports: [
@@ -22,6 +23,7 @@ import { LabelsModule } from './labels/labels.module';
     ProjectsModule,
     TasksModule,
     LabelsModule,
+    CommentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
