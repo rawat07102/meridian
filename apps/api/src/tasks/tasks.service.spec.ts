@@ -523,4 +523,98 @@ describe('TasksService', () => {
       expect(result.assignees.some((a: { id: string }) => a.id === 'other-user-id')).toBe(false);
     });
   });
+
+  // Add these describe blocks to the existing tasks.service.spec.ts file.
+  describe('addSubtask', () => {
+    const user = { id: 'user-1' } as User;
+
+    beforeEach(() => {
+      projectRepository.findOne.mockResolvedValue({ id: 'project-1', workspaceId: 'workspace-1' });
+      permissionsService.assertProjectMember.mockResolvedValue(undefined);
+      taskRepository.save.mockImplementation((t) => Promise.resolve(t));
+    });
+
+    it('should throw ConflictException if a task is linked to itself', async () => {
+      await expect(service.addSubtask('task-1', 'task-1', user)).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw ConflictException on a direct cycle (A -> B, then B -> A)', async () => {
+      // parentTaskId = 'task-b', subtaskId = 'task-a'
+      // task-b's ancestor chain: task-b -> task-a (task-b.parentTaskId = task-a)
+      // linking task-a as a subtask of task-b would create a cycle
+      taskRepository.findOne
+        .mockResolvedValueOnce({ id: 'task-b', parentTaskId: null }) // fetchTaskOrFail(parentTaskId='task-b')
+        .mockResolvedValueOnce({ id: 'task-a', parentTaskId: null }) // fetchTaskOrFail(subtaskId='task-a')
+        .mockResolvedValueOnce({ id: 'task-b', parentTaskId: 'task-a' }); // assertNoCycle walk: current=task-b
+
+      await expect(service.addSubtask('task-b', 'task-a', user)).rejects.toThrow(ConflictException);
+    });
+
+    it('should throw ConflictException on an indirect/multi-level cycle', async () => {
+      // Chain: task-c -> task-b -> task-a
+      // Trying to link task-a as a subtask of task-c would create a cycle,
+      // since task-a is already an ancestor of task-c (via task-b)
+      taskRepository.findOne
+        .mockResolvedValueOnce({ id: 'task-c', parentTaskId: null }) // fetchTaskOrFail(parentTaskId='task-c')
+        .mockResolvedValueOnce({ id: 'task-a', parentTaskId: null }) // fetchTaskOrFail(subtaskId='task-a')
+        .mockResolvedValueOnce({ id: 'task-c', parentTaskId: 'task-b' }) // walk: current=task-c
+        .mockResolvedValueOnce({ id: 'task-b', parentTaskId: 'task-a' }); // walk: current=task-b
+
+      await expect(service.addSubtask('task-c', 'task-a', user)).rejects.toThrow(ConflictException);
+    });
+
+    it('should successfully link a subtask when there is no cycle', async () => {
+      taskRepository.findOne
+        .mockResolvedValueOnce({ id: 'task-1', parentTaskId: null }) // fetchTaskOrFail(parentTaskId)
+        .mockResolvedValueOnce({ id: 'task-2', parentTaskId: null }) // fetchTaskOrFail(subtaskId)
+        .mockResolvedValueOnce({ id: 'task-1', parentTaskId: null }); // assertNoCycle walk: current=task-1, no parent
+
+      const result = await service.addSubtask('task-1', 'task-2', user);
+
+      expect(result.parentTaskId).toBe('task-1');
+    });
+
+    it('should throw ForbiddenException if the user is not a project member', async () => {
+      taskRepository.findOne
+        .mockResolvedValueOnce({ id: 'task-1', parentTaskId: null })
+        .mockResolvedValueOnce({ id: 'task-2', parentTaskId: null });
+      permissionsService.assertProjectMember.mockRejectedValue(
+        new ForbiddenException('You are not a member of this project'),
+      );
+
+      await expect(service.addSubtask('task-1', 'task-2', user)).rejects.toThrow(
+        ForbiddenException,
+      );
+    });
+  });
+
+  describe('removeSubtask', () => {
+    const user = { id: 'user-1' } as User;
+
+    beforeEach(() => {
+      projectRepository.findOne.mockResolvedValue({ id: 'project-1', workspaceId: 'workspace-1' });
+      permissionsService.assertProjectMember.mockResolvedValue(undefined);
+      taskRepository.save.mockImplementation((t) => Promise.resolve(t));
+    });
+
+    it('should throw ConflictException if the task is not actually a subtask of the given parent', async () => {
+      taskRepository.findOne
+        .mockResolvedValueOnce({ id: 'task-2', parentTaskId: 'some-other-parent' }) // subtask
+        .mockResolvedValueOnce({ id: 'task-1', parentTaskId: null }); // parentTask
+
+      await expect(service.removeSubtask('task-1', 'task-2', user)).rejects.toThrow(
+        ConflictException,
+      );
+    });
+
+    it('should unlink the subtask when it is actually a subtask of the given parent', async () => {
+      taskRepository.findOne
+        .mockResolvedValueOnce({ id: 'task-2', parentTaskId: 'task-1' }) // subtask
+        .mockResolvedValueOnce({ id: 'task-1', parentTaskId: null }); // parentTask
+
+      const result = await service.removeSubtask('task-1', 'task-2', user);
+
+      expect(result.parentTaskId).toBeNull();
+    });
+  });
 });

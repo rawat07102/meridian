@@ -116,4 +116,22 @@ export class TasksController {
   ) {
     return this.tasksService.detachLabel(id, user.id, labelId);
   }
+
+  @Post(':id/subtasks/:subtaskId')
+  addSubtask(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('subtaskId', ParseUUIDPipe) subtaskId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.tasksService.addSubtask(id, subtaskId, user);
+  }
+
+  @Delete(':id/subtasks/:subtaskId')
+  removeSubtask(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Param('subtaskId', ParseUUIDPipe) subtaskId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.tasksService.removeSubtask(id, subtaskId, user);
+  }
 }
