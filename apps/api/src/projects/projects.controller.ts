@@ -26,7 +26,7 @@ import { AddMemberDto } from './dto/add-member.dto';
 import { GuestJwtPayload } from '../auth/interfaces/guest-jwt-payload.interface';
 
 @UseGuards(AuthGuard('jwt'))
-@Controller('projects')
+@Controller()
 export class ProjectsController {
   constructor(private readonly projectsService: ProjectsService) {}
 
@@ -49,26 +49,26 @@ export class ProjectsController {
   }
 
   @UseGuards(AuthGuard(['jwt', 'guest-jwt']))
-  @Get(':id')
+  @Get('projects/:id')
   findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User | GuestJwtPayload) {
     return this.projectsService.findOne(id, user);
   }
 
   @UseGuards(ProjectRoleGuard)
   @MinProjectRoleRank(ProjectRole.LEAD)
-  @Patch(':id')
+  @Patch('projects/:id')
   update(@Param('id', ParseUUIDPipe) id: string, @Body() dto: UpdateProjectDto) {
     return this.projectsService.update(id, dto);
   }
 
   @UseGuards(ProjectRoleGuard)
   @MinProjectRoleRank(ProjectRole.LEAD)
-  @Patch(':id/lead')
+  @Patch('projects/:id/lead')
   changeLead(@Param('id', ParseUUIDPipe) id: string, @Body() dto: ChangeLeadDto) {
     return this.projectsService.changeLead(id, dto.newLeadId);
   }
 
-  @Delete(':id')
+  @Delete('projects/:id')
   remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.projectsService.remove(id, user.id);
   }
@@ -77,21 +77,21 @@ export class ProjectsController {
 
   @UseGuards(ProjectRoleGuard)
   @MinProjectRoleRank(ProjectRole.MEMBER)
-  @Get(':id/members')
+  @Get('projects/:id/members')
   findAllMembers(@Param('id', ParseUUIDPipe) id: string) {
     return this.projectsService.findAllMembers(id);
   }
 
   @UseGuards(ProjectRoleGuard)
   @MinProjectRoleRank(ProjectRole.LEAD)
-  @Post(':id/members')
+  @Post('projects/:id/members')
   addMember(@Param('id', ParseUUIDPipe) id: string, @Body() dto: AddMemberDto) {
     return this.projectsService.addMember(id, dto.userId);
   }
 
   @UseGuards(ProjectRoleGuard)
   @MinProjectRoleRank(ProjectRole.LEAD)
-  @Delete(':id/members/:userId')
+  @Delete('projects/:id/members/:userId')
   removeMember(
     @Param('id', ParseUUIDPipe) id: string,
     @Param('userId', ParseUUIDPipe) userId: string,
@@ -101,7 +101,7 @@ export class ProjectsController {
 
   @UseGuards(ProjectRoleGuard)
   @MinProjectRoleRank(ProjectRole.MEMBER)
-  @Post(':id/members/leave')
+  @Post('projects/:id/members/leave')
   leave(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
     return this.projectsService.leave(id, user.id);
   }
