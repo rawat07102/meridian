@@ -7,7 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { UpdateWorkspaceDto } from './dto/update-workspace.dto';
 import { CreateWorkspaceDto } from './dto/create-workspace.dto';
 import { PermissionsService } from '../permissions/permissions.service';
-import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
+import { GuestJwtPayload } from '../auth/interfaces/guest-jwt-payload.interface';
 
 @Injectable()
 export class WorkspacesService {

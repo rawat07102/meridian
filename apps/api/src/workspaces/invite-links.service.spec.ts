@@ -5,7 +5,7 @@ import { InviteLinksService } from './invite-links.service';
 import { InviteLink } from './entities/invite-link.entity';
 import { WorkspaceInviteEmail } from './entities/workspace-invite-email.entity';
 import { WorkspaceMember, WorkspaceRole } from './entities/workspace-member.entity';
-import { User } from 'src/users/entities/user.entity';
+import { User } from '../users/entities/user.entity';
 
 describe('InviteLinksService', () => {
   let service: InviteLinksService;

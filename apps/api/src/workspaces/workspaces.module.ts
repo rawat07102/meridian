@@ -10,7 +10,7 @@ import { InviteLink } from './entities/invite-link.entity';
 import { WorkspaceInviteEmail } from './entities/workspace-invite-email.entity';
 import { InviteLinksService } from './invite-links.service';
 import { InviteLinksPublicController } from './invite-links-public.controller';
-import { AuthModule } from 'src/auth/auth.module';
+import { AuthModule } from '../auth/auth.module';
 
 @Module({
   imports: [

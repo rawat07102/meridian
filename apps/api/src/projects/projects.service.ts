@@ -14,7 +14,7 @@ import { CreateProjectDto } from './dto/create-project.dto';
 import { UpdateProjectDto } from './dto/update-project.dto';
 import { PermissionsService } from '../permissions/permissions.service';
 import { Label } from '../labels/entities/label.entity';
-import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
+import { GuestJwtPayload } from '../auth/interfaces/guest-jwt-payload.interface';
 
 @Injectable()
 export class ProjectsService {

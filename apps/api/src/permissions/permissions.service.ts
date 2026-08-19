@@ -11,7 +11,7 @@ import { PROJECT_ROLE_RANK, ProjectRole } from './constants/project-role-rank';
 import { Task } from '../tasks/entities/task.entity';
 import { GuestJwtPayload } from '../auth/interfaces/guest-jwt-payload.interface';
 import { isGuestPayload } from '../auth/utils/is-guest.util';
-import { Comment } from 'src/comments/entities/comment.entity';
+import { Comment } from '../comments/entities/comment.entity';
 
 @Injectable()
 export class PermissionsService {
