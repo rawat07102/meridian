@@ -23,7 +23,7 @@ import { UpdateProjectDto } from './dto/update-project.dto';
 import { ProjectRoleGuard } from './guards/project-role.guard';
 import { ChangeLeadDto } from './dto/change-lead.dto';
 import { AddMemberDto } from './dto/add-member.dto';
-import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
+import { GuestJwtPayload } from '../auth/interfaces/guest-jwt-payload.interface';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('projects')

@@ -22,7 +22,7 @@ import { WorkspaceRole } from './entities/workspace-member.entity';
 import { InviteLinksService } from './invite-links.service';
 import { UpdateInviteLinkExpiryDto } from './dto/update-invite-link-expiry.dto';
 import { AddInviteEmailDto } from './dto/add-invite-email.dto';
-import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
+import { GuestJwtPayload } from '../auth/interfaces/guest-jwt-payload.interface';
 
 @UseGuards(AuthGuard('jwt'))
 @Controller('workspaces')

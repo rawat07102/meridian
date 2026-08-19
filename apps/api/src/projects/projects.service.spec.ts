@@ -6,8 +6,8 @@ import { Project } from './entities/project.entity';
 import { ProjectMember } from './entities/project-member.entity';
 import { PermissionsService } from '../permissions/permissions.service';
 import { CreateProjectDto } from './dto/create-project.dto';
-import { User } from 'src/users/entities/user.entity';
-import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
+import { User } from '../users/entities/user.entity';
+import { GuestJwtPayload } from '../auth/interfaces/guest-jwt-payload.interface';
 
 describe('ProjectsService', () => {
   let service: ProjectsService;

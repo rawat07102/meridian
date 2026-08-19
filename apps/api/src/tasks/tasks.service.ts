@@ -15,7 +15,7 @@ import { UpdateTaskDto } from './dto/update-task.dto';
 import { UpdateStatusDto } from './dto/update-status.dto';
 import { ReorderTaskDto } from './dto/reorder-task.dto';
 import { Label } from '../labels/entities/label.entity';
-import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
+import { GuestJwtPayload } from '../auth/interfaces/guest-jwt-payload.interface';
 
 @Injectable()
 export class TasksService {

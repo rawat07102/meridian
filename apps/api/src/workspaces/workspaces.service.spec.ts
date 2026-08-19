@@ -5,8 +5,8 @@ import { WorkspacesService } from './workspaces.service';
 import { Workspace } from './entities/workspace.entity';
 import { WorkspaceMember, WorkspaceRole } from './entities/workspace-member.entity';
 import { PermissionsService } from '../permissions/permissions.service';
-import { User } from 'src/users/entities/user.entity';
-import { GuestJwtPayload } from 'src/auth/interfaces/guest-jwt-payload.interface';
+import { User } from '../users/entities/user.entity';
+import { GuestJwtPayload } from '../auth/interfaces/guest-jwt-payload.interface';
 
 describe('WorkspacesService', () => {
   let service: WorkspacesService;
