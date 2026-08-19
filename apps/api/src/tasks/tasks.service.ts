@@ -167,6 +167,56 @@ export class TasksService {
     return this.taskRepository.save(task);
   }
 
+  async addSubtask(parentTaskId: string, subtaskId: string, user: User): Promise<Task> {
+    if (parentTaskId === subtaskId) {
+      throw new ConflictException('A task cannot be its own subtask');
+    }
+
+    const parentTask = await this.fetchTaskOrFail(parentTaskId);
+    const subtask = await this.fetchTaskOrFail(subtaskId);
+    const project = await this.fetchProjectOrFail(parentTask.projectId);
+
+    await this.permissionsService.assertProjectMember(user.id, project);
+
+    await this.assertNoCycle(parentTaskId, subtaskId);
+
+    subtask.parentTaskId = parentTaskId;
+    return this.taskRepository.save(subtask);
+  }
+
+  async removeSubtask(parentTaskId: string, subtaskId: string, user: User): Promise<Task> {
+    const subtask = await this.fetchTaskOrFail(subtaskId);
+    const parentTask = await this.fetchTaskOrFail(parentTaskId);
+    const project = await this.fetchProjectOrFail(parentTask.projectId);
+
+    await this.permissionsService.assertProjectMember(user.id, project);
+
+    if (subtask.parentTaskId !== parentTaskId) {
+      throw new ConflictException('This task is not a subtask of the given parent');
+    }
+
+    subtask.parentTaskId = null;
+    return this.taskRepository.save(subtask);
+  }
+
+  private async assertNoCycle(parentTaskId: string, subtaskId: string): Promise<void> {
+    // Walk up from parentTaskId's ancestors — if subtaskId appears, linking would create a cycle
+    let currentId: string | null = parentTaskId;
+    const visited = new Set<string>();
+
+    while (currentId) {
+      if (currentId === subtaskId) {
+        throw new ConflictException('This would create a circular subtask reference');
+      }
+      if (visited.has(currentId)) break; // safety net against pre-existing bad data
+      visited.add(currentId);
+
+      // oxlint-disable-next-line no-await-in-loop
+      const current = await this.taskRepository.findOne({ where: { id: currentId } });
+      currentId = current?.parentTaskId ?? null;
+    }
+  }
+
   private async calculatePosition(
     prevTaskId: string | undefined,
     nextTaskId: string | undefined,
