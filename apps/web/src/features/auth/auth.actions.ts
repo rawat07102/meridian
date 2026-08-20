@@ -2,6 +2,7 @@
 
 import { setAuthCookies, apiFetch } from '@/lib/api';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export type LoginResponse = {
   accessToken: string;
@@ -18,5 +19,5 @@ export async function loginAsGuest() {
   });
 
   await setAuthCookies(await cookies(), res);
-  return res;
+  redirect(`/workspaces/${process.env.NEXT_PUBLIC_WORKSPACE_ID}`);
 }

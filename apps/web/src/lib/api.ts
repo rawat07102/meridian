@@ -1,5 +1,6 @@
 'use server';
 import { cookies } from 'next/headers';
+import { redirect } from 'next/navigation';
 
 export async function apiFetch<T = unknown>(
   endpoint: string,
@@ -105,5 +106,14 @@ async function refreshAuthTokens(
   } catch {
     clearAuthCookies(cookieStore);
     return null;
+  }
+}
+
+export async function verifyAuthTokens(): Promise<void> {
+  const cookieStore = await cookies();
+  let accessToken = cookieStore.get('accessToken')?.value || null;
+  const refreshToken = cookieStore.get('refreshToken')?.value || null;
+  if (!accessToken && !refreshToken) {
+    return redirect('/auth/login');
   }
 }
