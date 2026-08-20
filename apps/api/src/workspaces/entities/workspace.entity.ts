@@ -6,6 +6,7 @@ import {
   OneToMany,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { WorkspaceMember } from './workspace-member.entity';
@@ -19,6 +20,7 @@ export class Workspace {
   name!: string;
 
   @ManyToOne(() => User)
+  @JoinColumn({ name: 'owner_id' })
   owner!: User;
 
   @Column({ name: 'owner_id' })

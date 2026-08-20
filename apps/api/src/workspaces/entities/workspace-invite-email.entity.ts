@@ -5,6 +5,7 @@ import {
   ManyToOne,
   CreateDateColumn,
   Unique,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { InviteLink } from './invite-link.entity';
@@ -16,6 +17,7 @@ export class WorkspaceInviteEmail {
   id!: string;
 
   @ManyToOne(() => InviteLink, (link) => link.allowedEmails)
+  @JoinColumn({ name: 'invite_link_id' })
   inviteLink!: InviteLink;
 
   @Column({ name: 'invite_link_id', type: 'uuid' })
@@ -25,6 +27,7 @@ export class WorkspaceInviteEmail {
   email!: string;
 
   @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'accepted_by_user_id' })
   acceptedBy!: User | null;
 
   @Column({ name: 'accepted_by_user_id', type: 'uuid', nullable: true })
