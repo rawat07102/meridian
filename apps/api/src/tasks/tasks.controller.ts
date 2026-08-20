@@ -49,6 +49,14 @@ export class TasksController {
     return this.tasksService.findOne(id, user);
   }
 
+  @Get('workspaces/:workspaceId/tasks/assigned-to-me')
+  findAssignedToMe(
+    @Param('workspaceId', ParseUUIDPipe) workspaceId: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.tasksService.findAssignedToMeInWorkspace(workspaceId, user.id);
+  }
+
   @Patch('tasks/:id')
   update(
     @Param('id', ParseUUIDPipe) id: string,

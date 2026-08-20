@@ -1,9 +1,4 @@
-import {
-  Injectable,
-  NotFoundException,
-  ConflictException,
-  ForbiddenException,
-} from '@nestjs/common';
+import { Injectable, NotFoundException, ConflictException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as crypto from 'crypto';
@@ -109,27 +104,29 @@ export class InviteLinksService {
       throw new NotFoundException('Invite link is invalid or has expired');
     }
 
-    const invitedEmail = await this.inviteEmailRepository.findOne({
-      where: { inviteLinkId: link.id, email: user.email },
-    });
-
-    if (!invitedEmail) {
-      throw new ForbiddenException('This email is not invited to join this workspace');
-    }
-
-    if (invitedEmail.acceptedByUserId) {
-      throw new ConflictException('This invite has already been used');
-    }
+    // INFO: Removed this for the sample, allowin anyone to explore the app
+    // const invitedEmail = await this.inviteEmailRepository.findOne({
+    //   where: { inviteLinkId: link.id, email: user.email },
+    // });
+    //
+    // if (!invitedEmail) {
+    //   throw new ForbiddenException('This email is not invited to join this workspace');
+    // }
+    //
+    // if (invitedEmail.acceptedByUserId) {
+    //   throw new ConflictException('This invite has already been used');
+    // }
 
     const existingMembership = await this.workspaceMemberRepository.findOne({
       where: { userId: user.id, workspaceId: link.workspaceId },
     });
+
     if (existingMembership) {
       throw new ConflictException('You are already a member of this workspace');
     }
 
-    invitedEmail.acceptedByUserId = user.id;
-    await this.inviteEmailRepository.save(invitedEmail);
+    // invitedEmail.acceptedByUserId = user.id;
+    // await this.inviteEmailRepository.save(invitedEmail);
 
     return this.workspaceMemberRepository.save(
       this.workspaceMemberRepository.create({

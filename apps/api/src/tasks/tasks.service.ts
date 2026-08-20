@@ -51,6 +51,14 @@ export class TasksService {
     return this.taskRepository.find({ where: { projectId }, order: { position: 'ASC' } });
   }
 
+  async findAssignedToMeInWorkspace(workspaceId: string, userId: User['id']): Promise<Task[]> {
+    return this.taskRepository
+      .createQueryBuilder('task')
+      .innerJoin('task.assignees', 'assignee', 'assignee.id = :userId', { userId })
+      .innerJoin('task.project', 'project', 'project.workspaceId = :workspaceId', { workspaceId })
+      .getMany();
+  }
+
   async findOne(id: string, user: User | GuestJwtPayload): Promise<Task> {
     const task = await this.fetchTaskOrFail(id);
     const project = await this.fetchProjectOrFail(task.projectId);
