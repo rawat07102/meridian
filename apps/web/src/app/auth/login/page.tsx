@@ -8,13 +8,7 @@ export default function LoginPage() {
   const [isPending, startTransition] = useTransition();
 
   const handleGuestLogin = () => {
-    startTransition(async () => {
-      try {
-        await loginAsGuest();
-      } catch (error) {
-        console.error('Guest login failed:', error);
-      }
-    });
+    startTransition(async () => loginAsGuest());
   };
 
   return (
