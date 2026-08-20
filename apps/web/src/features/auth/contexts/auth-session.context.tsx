@@ -31,7 +31,7 @@ export function AuthSessionProvider({ children }: { children: React.ReactNode })
     async (email: string, password: string) => {
       setIsLoading(true);
       try {
-        const apiRes = await authApi.login(email, password);
+        const apiRes = await authApi.login({ email, password });
         localStorage.setItem('session', JSON.stringify(apiRes));
         setSession(apiRes);
       } catch (error) {

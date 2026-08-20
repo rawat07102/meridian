@@ -13,5 +13,5 @@ export default function Home() {
     return <p>Loading...</p>;
   }
 
-  return redirect(`/workspaces/${process.env.NEXT_PUBLIC_DEFAULT_WORKSPACE_ID}`);
+  return redirect(`/workspaces/${process.env.NEXT_PUBLIC_WORKSPACE_ID}`);
 }

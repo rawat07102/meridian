@@ -17,3 +17,8 @@ export type SignupData = {
   fullName: string;
   username: string;
 };
+
+export type LoginData = {
+  email: string;
+  password: string;
+};
