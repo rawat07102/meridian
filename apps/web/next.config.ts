@@ -10,17 +10,17 @@ function getApiUrl(): string {
 
   // Running in vercel with no explicit override, use related project
   if (process.env.VERCEL) {
-    console.log("API_URL not found, using <Related Project>'s url as NEXT_PUBLIC_API_URL");
     const apiHost = withRelatedProject({
       projectName: 'meridian-api',
       defaultHost: 'meridian-api-opal.vercel.app',
     });
+    console.log(`API_URL not found, using https://${apiHost} url as NEXT_PUBLIC_API_URL`);
     return `https://${apiHost}`;
   }
 
   // if nothing is set in local dev environment
-  console.log('API_URL not set in .env.local, using http://loclhost:8080 as NEXT_PUBLIC_API_URL');
-  return 'http://localhost:8080';
+  console.log('API_URL not set in .env.local, using http://loclhost:4000 as NEXT_PUBLIC_API_URL');
+  return 'http://localhost:4000';
 }
 const nextConfig: NextConfig = {
   env: {
