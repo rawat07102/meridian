@@ -1,4 +1,4 @@
-import { GuestSession, SignupData, UserSession } from './auth.types';
+import { SignupData, UserSession } from './auth.types';
 
 const authApi = {
   async signup(_data: SignupData): Promise<UserSession> {
@@ -9,11 +9,13 @@ const authApi = {
       refreshToken: 'user-refresh-token',
     };
   },
-  async loginAsGuest(): Promise<GuestSession> {
+
+  async loginAsGuest(): Promise<UserSession> {
     return {
       type: 'guest',
+      id: 'mock-guest-id',
       accessToken: 'guest-access-token',
-      workspaceId: 'mock-workspace-id',
+      refreshToken: 'guest-refresh-token',
     };
   },
 

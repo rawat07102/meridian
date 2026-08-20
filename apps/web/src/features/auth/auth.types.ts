@@ -1,11 +1,11 @@
-export type GuestSession = {
-  type: 'guest';
-  accessToken: string;
-  workspaceId: string;
-};
+// export type GuestSession = {
+//   type: 'guest';
+//   accessToken: string;
+//   workspaceId: string;
+// };
 
 export type UserSession = {
-  type: 'user';
+  type: 'user' | 'guest';
   id: string;
   accessToken: string;
   refreshToken: string;
