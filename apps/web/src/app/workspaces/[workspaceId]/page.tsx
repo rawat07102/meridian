@@ -3,12 +3,12 @@ import { apiFetch } from '@/lib/api';
 
 type Props = {
   params: Promise<{
-    id: string;
+    workspaceId: string;
   }>;
 };
 export default async function WorkspacePage({ params }: Props) {
-  const { id } = await params;
-  const projects = await apiFetch<Project[]>(`/workspaces/${id}/projects`);
+  const { workspaceId } = await params;
+  const projects = await apiFetch<Project[]>(`/workspaces/${workspaceId}/projects`);
 
   return (
     <main>

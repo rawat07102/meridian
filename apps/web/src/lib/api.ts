@@ -27,6 +27,7 @@ export async function apiFetch<T = unknown>(
 
   // Handle Token Refresh on 401
   if (response.status === 401 && isServer && cookieStore) {
+    console.log('[apiFetch] Refreshing token');
     const baseUrl = process.env.NEXT_PUBLIC_API_URL;
     const newAccessToken = await refreshAuthTokens(baseUrl!, cookieStore);
 
@@ -63,7 +64,8 @@ export async function setAuthCookies(cookieStore: CookieStore, tokens: AuthToken
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'lax',
     path: '/',
-    maxAge: 60 * 15, // 15 mins
+    // maxAge: 60 * 15, // 15 mins
+    maxAge: 60 * 60 * 24 * 30, // 30 days
   });
 
   if (tokens.refreshToken) {
@@ -72,7 +74,7 @@ export async function setAuthCookies(cookieStore: CookieStore, tokens: AuthToken
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
       path: '/',
-      maxAge: 60 * 60 * 24 * 30, // 7 days
+      maxAge: 60 * 60 * 24 * 30, // 30 days
     });
   }
 }
