@@ -57,6 +57,7 @@ function getTargetUrl(endpoint: string): string {
 }
 
 export async function setAuthCookies(cookieStore: CookieStore, tokens: AuthTokens): Promise<void> {
+  console.log('Setting auth cookies', tokens);
   cookieStore.set('accessToken', tokens.accessToken, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
