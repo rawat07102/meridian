@@ -5,6 +5,7 @@ import {
   ManyToOne,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Task } from '../../tasks/entities/task.entity';
@@ -18,12 +19,14 @@ export class Comment {
   content!: string;
 
   @ManyToOne(() => Task)
+  @JoinColumn({ name: 'task_id' })
   task!: Task;
 
   @Column({ name: 'task_id', type: 'uuid' })
   taskId!: Task['id'];
 
   @ManyToOne(() => User)
+  @JoinColumn({ name: 'author_id' })
   author!: User;
 
   @Column({ name: 'author_id', type: 'uuid' })

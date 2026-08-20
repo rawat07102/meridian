@@ -7,6 +7,7 @@ import {
   JoinTable,
   CreateDateColumn,
   UpdateDateColumn,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Project } from '../../projects/entities/project.entity';
@@ -55,18 +56,21 @@ export class Task {
   startDate!: string | null;
 
   @ManyToOne(() => User)
+  @JoinColumn({ name: 'creator_id' })
   creator!: User;
 
   @Column({ name: 'creator_id', type: 'uuid' })
   creatorId!: User['id'];
 
   @ManyToOne(() => Project)
+  @JoinColumn({ name: 'project_id' })
   project!: Project;
 
   @Column({ name: 'project_id', type: 'uuid' })
   projectId!: Project['id'];
 
   @ManyToOne(() => Task, { nullable: true })
+  @JoinColumn({ name: 'parent_task_id' })
   parentTask!: Task | null;
 
   @Column({ name: 'parent_task_id', type: 'uuid', nullable: true })

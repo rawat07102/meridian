@@ -5,6 +5,7 @@ import {
   ManyToOne,
   CreateDateColumn,
   Unique,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Workspace } from './workspace.entity';
@@ -24,9 +25,11 @@ export class WorkspaceMember {
   user!: User;
 
   @Column({ name: 'user_id' })
+  @JoinColumn({ name: 'user_id' })
   userId!: string;
 
   @ManyToOne(() => Workspace, (workspace) => workspace.members)
+  @JoinColumn({ name: 'workspace_id' })
   workspace!: Workspace;
 
   @Column({ name: 'workspace_id' })

@@ -5,6 +5,7 @@ import {
   ManyToOne,
   CreateDateColumn,
   Unique,
+  JoinColumn,
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 import { Project } from './project.entity';
@@ -16,12 +17,14 @@ export class ProjectMember {
   id!: string;
 
   @ManyToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
   user!: User;
 
   @Column({ name: 'user_id', type: 'uuid' })
   userId!: User['id'];
 
   @ManyToOne(() => Project, (project) => project.members)
+  @JoinColumn({ name: 'project_id' })
   project!: Project;
 
   @Column({ name: 'project_id', type: 'uuid' })
