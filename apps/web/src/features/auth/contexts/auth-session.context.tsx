@@ -1,10 +1,10 @@
 'use client';
 import React from 'react';
-import { GuestSession, SignupData, UserSession } from '../auth.types';
+import { SignupData, UserSession } from '../auth.types';
 import authApi from '../auth.api';
 
 export interface AuthSessionContext {
-  session: GuestSession | UserSession | null;
+  session: UserSession | null;
   isLoading: boolean;
   isAuthenticated: boolean;
   signup: (data: SignupData) => Promise<void>;
@@ -16,7 +16,7 @@ export interface AuthSessionContext {
 const AuthSessionContext = React.createContext<AuthSessionContext | null>(null);
 
 export function AuthSessionProvider({ children }: { children: React.ReactNode }) {
-  const [session, setSession] = React.useState<GuestSession | UserSession | null>(null);
+  const [session, setSession] = React.useState<UserSession | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
 
   React.useEffect(() => {
