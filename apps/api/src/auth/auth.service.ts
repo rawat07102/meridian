@@ -79,6 +79,27 @@ export class AuthService {
     await this.refreshTokenRepository.delete({ token: hashedRefreshToken });
   }
 
+  async googleLogin(googleUser: { email: string; fullName: string }) {
+    let user = await this.usersService.findByEmail(googleUser.email);
+
+    if (!user) {
+      // Generate a username from email, ensure uniqueness with a fallback
+      const baseUsername = googleUser.email.split('@')[0];
+      const uniqueSuffix = crypto.randomBytes(3).toString('hex');
+      const username = `${baseUsername}-${uniqueSuffix}`;
+
+      user = await this.usersService.create({
+        email: googleUser.email,
+        username,
+        fullName: googleUser.fullName,
+        passwordHash: null,
+        authProvider: 'google',
+      });
+    }
+
+    return this.issueTokens(user.id);
+  }
+
   async issueGuestToken(workspaceId: string): Promise<{ accessToken: string }> {
     const payload: GuestJwtPayload = { role: 'guest', workspaceId };
     const accessToken = this.jwtService.sign(payload, { expiresIn: '7d' });

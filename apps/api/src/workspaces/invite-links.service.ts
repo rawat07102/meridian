@@ -120,6 +120,7 @@ export class InviteLinksService {
     const existingMembership = await this.workspaceMemberRepository.findOne({
       where: { userId: user.id, workspaceId: link.workspaceId },
     });
+
     if (existingMembership) {
       throw new ConflictException('You are already a member of this workspace');
     }
