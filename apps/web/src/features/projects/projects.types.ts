@@ -8,7 +8,7 @@ export type Project = {
   createdBy: string;
   workspaceId: string;
   startDate: string | null;
-  dueDate: string | null;
+  dueDate: string;
   color: string | null;
   createdAt: string;
   updatedAt: string;

@@ -1,4 +1,5 @@
 import { AppSidebar } from '@/components/layout/AppSidebar';
+import { Separator } from '@/components/ui/separator';
 import { SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 
 export default function WorkspaceLayout({ children }: { children: React.ReactNode }) {
@@ -7,6 +8,7 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
       <AppSidebar />
       <main className="flex-1 ml-1">
         <SidebarTrigger />
+        <Separator />
         {children}
       </main>
     </SidebarProvider>

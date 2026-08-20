@@ -1,3 +1,4 @@
+import { DataTable, columns } from '@/components/layout/data-table';
 import { Project } from '@/features/projects/projects.types';
 import { apiFetch } from '@/lib/api';
 
@@ -12,9 +13,7 @@ export default async function WorkspacePage({ params }: Props) {
 
   return (
     <main>
-      {projects.map((p) => (
-        <div key={p.id}>{JSON.stringify(p, null, 2)}</div>
-      ))}
+      <DataTable columns={columns} data={projects} />
     </main>
   );
 }
