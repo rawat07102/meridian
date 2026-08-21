@@ -20,12 +20,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { createProject } from '@/features/projects/projects.actions';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import React from 'react';
-import { ProjectPriority, ProjectStatus } from '../projects.types';
 import { format } from 'date-fns';
+import { CreateTaskData, Task } from '../tasks.types';
+import { createTask } from '../tasks.actions';
 
 const priorityOptions = [
   { value: 'no_priority', label: 'No Priority' },
@@ -36,28 +36,27 @@ const priorityOptions = [
 ];
 
 type Props = {
-  workspaceId: string;
+  projectId: string;
 };
 
-export default function CreateProjectDialog({ workspaceId }: Props) {
+export default function CreateTaskDialog({ projectId }: Props) {
   const [open, setOpen] = React.useState(false);
   const [isPending, startTransition] = React.useTransition();
   const [title, setTitle] = React.useState('');
   const [description, setDescription] = React.useState('');
-  const [priority, setPriority] = React.useState<ProjectPriority>(ProjectPriority.NO_PRIORITY);
+  const [priority, setPriority] = React.useState<Task['priority']>('no_priority');
   const [dueDate, setDueDate] = React.useState<Date>(new Date());
 
   const handleSubmit = async () => {
-    const data = {
+    const data: CreateTaskData = {
       title,
       description,
       priority,
       startDate: format(Date.now(), 'yyyy-MM-dd'),
       dueDate: format(dueDate, 'yyyy-MM-dd'),
-      status: ProjectStatus.ACTIVE,
     };
     startTransition(async () => {
-      await createProject(workspaceId, data);
+      await createTask(projectId, data);
       setOpen(false);
     });
   };
@@ -65,17 +64,17 @@ export default function CreateProjectDialog({ workspaceId }: Props) {
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <form>
-        <DialogTrigger render={<Button>Add Project</Button>} />
+        <DialogTrigger render={<Button>Add Task</Button>} />
         <DialogContent className="sm:max-w-sm">
           <DialogHeader>
-            <DialogTitle>Add Project</DialogTitle>
+            <DialogTitle>Add Task</DialogTitle>
           </DialogHeader>
           <Input
             required
             value={title}
             onChange={(e) => setTitle(e.target.value)}
             name="title"
-            placeholder="Project Title"
+            placeholder="Task Title"
             className="mb-2"
           />
           <Textarea
@@ -83,7 +82,7 @@ export default function CreateProjectDialog({ workspaceId }: Props) {
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             name="description"
-            placeholder="Project Description"
+            placeholder="Task Description"
             className="mb-2"
           />
           <div>
@@ -96,7 +95,7 @@ export default function CreateProjectDialog({ workspaceId }: Props) {
             />
             <Select
               value={priority}
-              onValueChange={(p) => setPriority(p ?? ProjectPriority.NO_PRIORITY)}
+              onValueChange={(p) => setPriority(p ?? 'no_priority')}
               required
               items={priorityOptions}
             >

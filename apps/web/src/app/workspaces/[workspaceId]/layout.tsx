@@ -6,7 +6,7 @@ export default function WorkspaceLayout({ children }: { children: React.ReactNod
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="flex-1 ml-1">
+      <main className="flex flex-col gap-4 flex-1 ml-1 min-w-0">
         <SidebarTrigger />
         <Separator />
         {children}

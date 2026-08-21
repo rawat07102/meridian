@@ -8,8 +8,8 @@ export type Task = {
   position: number;
   dueDate: string | null;
   parentTaskId: null;
-  assignees: Assignee[];
-  labels: Label[];
+  // assignees: Assignee[];
+  // labels: Label[];
   startDate: string | null;
   status: Status;
   createdAt: string;
@@ -18,13 +18,21 @@ export type Task = {
 
 export type Status = 'backlog' | 'todo' | 'in_progress' | 'in_review' | 'done';
 
-type Assignee = {
-  id: string;
-  username: string;
-  fullName: string;
-  avatarUrl: string | null;
-};
-
-type Label = { id: string; name: string; color: string };
+// type Assignee = {
+//   id: string;
+//   username: string;
+//   fullName: string;
+//   avatarUrl: string | null;
+// };
+//
+// type Label = { id: string; name: string; color: string };
 
 export type Priority = 'no_priority' | 'low' | 'medium' | 'high' | 'urgent';
+
+export type CreateTaskData = {
+  title: string;
+  description: string | null;
+  priority: Priority;
+  dueDate: string | null;
+  startDate: string | null;
+};

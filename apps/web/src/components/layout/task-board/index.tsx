@@ -1,15 +1,16 @@
 'use client';
 
-import { mockTasks } from './taskData.mock';
 import { DragDropProvider } from '@dnd-kit/react';
 import React from 'react';
 import { BoardColumn } from './board-column';
-import { GroupedTasks, groupTasksByStatus, isStatusGuard } from './helpers';
+import { GroupedTasks, isStatusGuard } from './helpers';
 
-const groupedTasks = groupTasksByStatus(mockTasks);
+type Props = {
+  initialTasks: GroupedTasks;
+};
 
-export default function TaskBoard() {
-  const [tasks, setTasks] = React.useState<GroupedTasks>(groupedTasks);
+export default function TaskBoard({ initialTasks }: Props) {
+  const [tasks, setTasks] = React.useState<GroupedTasks>(initialTasks);
   return (
     <div className="flex gap-4 rounded-2xl p-2">
       <DragDropProvider

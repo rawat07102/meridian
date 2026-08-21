@@ -45,7 +45,11 @@ export function BoardCard({ task }: Props) {
       </div>
 
       <div className="flex flex-wrap">
-        {task.labels.map((label) => (
+        {[
+          { id: 1, name: 'bug' },
+          { id: 2, name: 'feature' },
+          { id: 3, name: 'enhancement' },
+        ].map((label) => (
           <span
             key={label.id}
             className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium"

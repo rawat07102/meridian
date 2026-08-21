@@ -23,7 +23,7 @@ export default async function WorkspacePage({ params }: Props) {
         <h1>Projects</h1>
         <div className="flex gap-2">
           <ButtonGroup>
-            <Button>
+            <Button variant="outline">
               <Search size={16} />
             </Button>
             <Input />
