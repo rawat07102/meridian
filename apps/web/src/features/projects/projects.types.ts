@@ -2,7 +2,7 @@ export type Project = {
   id: string;
   title: string;
   description: string | null;
-  priority: string;
+  priority: ProjectPriority;
   status: string;
   leadId: string;
   createdBy: string;
@@ -13,3 +13,11 @@ export type Project = {
   createdAt: string;
   updatedAt: string;
 };
+
+export enum ProjectPriority {
+  NO_PRIORITY = 'no_priority',
+  LOW = 'low',
+  MEDIUM = 'medium',
+  HIGH = 'high',
+  URGENT = 'urgent',
+}

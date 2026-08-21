@@ -71,7 +71,7 @@ export function AppSidebar() {
                 Tasks
               </Link>
               <Link
-                href={`/workspaces/${workspaceId}/projects`}
+                href={`/workspaces/${workspaceId}`}
                 className={buttonVariants({
                   variant: 'ghost',
                   className: 'w-full justify-start rounded-full',
