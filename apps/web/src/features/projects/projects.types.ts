@@ -28,3 +28,27 @@ export const PROJECT_PRIORITY: Readonly<Record<ProjectPriority, string>> = Objec
   [ProjectPriority.HIGH]: 'high',
   [ProjectPriority.URGENT]: 'urgent',
 });
+
+export enum ProjectStatus {
+  ACTIVE = 'active',
+  ON_HOLD = 'on_hold',
+  COMPLETED = 'completed',
+  ARCHIVED = 'archived',
+}
+
+export const PROJECT_STATUS: Readonly<Record<ProjectStatus, string>> = Object.freeze({
+  [ProjectStatus.ACTIVE]: 'active',
+  [ProjectStatus.ON_HOLD]: 'on_hold',
+  [ProjectStatus.COMPLETED]: 'completed',
+  [ProjectStatus.ARCHIVED]: 'archived',
+});
+
+export type CreateProjectData = {
+  title: string;
+  description: string;
+  priority: ProjectPriority;
+  status: ProjectStatus;
+  leadId: string;
+  startDate: string;
+  dueDate: string;
+};

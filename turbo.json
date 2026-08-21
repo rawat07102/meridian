@@ -4,13 +4,19 @@
     "dev": {
       "cache": false,
       "persistent": true,
-      "env": ["!NEXT_PUBLIC_*", "API_URL", "NEXT_PUBLIC_WORKSPACE_ID"]
+      "env": ["!NEXT_PUBLIC_*", "API_URL", "NEXT_PUBLIC_WORKSPACE_ID", "GUEST_ID"]
     },
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env"],
       "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**", "dist/**"],
-      "env": ["!NEXT_PUBLIC_*", "VERCEL_RELATED_PROJECTS", "API_URL", "NEXT_PUBLIC_WORKSPACE_ID"]
+      "env": [
+        "!NEXT_PUBLIC_*",
+        "VERCEL_RELATED_PROJECTS",
+        "API_URL",
+        "NEXT_PUBLIC_WORKSPACE_ID",
+        "GUEST_ID"
+      ]
     },
     "lint": {},
     "lint:fix": {
