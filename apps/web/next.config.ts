@@ -14,8 +14,8 @@ function getApiUrl(): string {
       projectName: 'meridian-api',
       defaultHost: 'meridian-api-opal.vercel.app',
     });
-    console.log(`API_URL not found, using https://${apiHost} url as NEXT_PUBLIC_API_URL`);
-    return `https://${apiHost}`;
+    console.log(`API_URL not found, using ${apiHost} url as NEXT_PUBLIC_API_URL`);
+    return apiHost;
   }
 
   // if nothing is set in local dev environment
