@@ -22,11 +22,12 @@ import {
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
 import { TaskPriority } from '@/features/tasks/tasks.types';
 import { cn } from '@/lib/utils';
+import { ProjectPriority } from '@/features/projects/projects.types';
 
 type TableData = {
   title: string;
   dueDate: string;
-  priority: TaskPriority;
+  priority: TaskPriority | ProjectPriority;
 };
 
 // Use `accessor` for data columns and `display` for columns without one.
