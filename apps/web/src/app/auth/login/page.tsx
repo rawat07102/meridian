@@ -12,7 +12,7 @@ export default function LoginPage() {
   };
 
   return (
-    <main>
+    <main className="flex items-center justify-center">
       <Button onClick={handleGuestLogin} disabled={isPending}>
         {isPending ? 'Signing in...' : 'Continue as Guest'}
       </Button>
