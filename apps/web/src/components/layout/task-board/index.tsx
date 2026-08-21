@@ -1,72 +1,56 @@
-import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import { CalendarDays, Ellipsis, GripVertical, Plus, Tag } from 'lucide-react';
+'use client';
+
+import { mockTasks } from './taskData.mock';
+import { DragDropProvider } from '@dnd-kit/react';
+import React from 'react';
+import { BoardColumn } from './board-column';
+import { GroupedTasks, groupTasksByStatus, isStatusGuard } from './helpers';
+
+const groupedTasks = groupTasksByStatus(mockTasks);
 
 export default function TaskBoard() {
+  const [tasks, setTasks] = React.useState<GroupedTasks>(groupedTasks);
   return (
     <div className="flex gap-4 rounded-2xl p-2">
-      <BoardColumn />
-    </div>
-  );
-}
+      <DragDropProvider
+        onDragEnd={({ canceled, operation }) => {
+          if (canceled) return;
+          const taskId = operation.source?.id;
+          const newStatus = operation.target?.id as string;
+          const activeStatus = operation.source?.data.status;
+          console.log(`Task ${taskId} moved to ${newStatus} from ${activeStatus}`);
+          if (!isStatusGuard(newStatus) || !isStatusGuard(activeStatus)) {
+            console.error(`invalid status ${newStatus} or ${activeStatus}}`);
+            return;
+          }
 
-function BoardColumn() {
-  return (
-    <div className="bg-secondary flex flex-col rounded-md gap-2 py-2 px-2 min-w-75">
-      <div className="flex justify-between items-center">
-        <div className="flex gap-2 items-center">
-          <GripVertical strokeWidth={2} size={14} />
-          <span className="text-xs font-medium">To Do</span>
-        </div>
-        <div className="flex gap-2 items-center">
-          <Plus strokeWidth={2} size={14} />
-          <Ellipsis strokeWidth={2} size={14} />
-        </div>
-      </div>
-      <BoardCard />
-      <BoardCard />
-    </div>
-  );
-}
+          if (newStatus === activeStatus) {
+            console.error(`same status ${newStatus} or ${activeStatus}`);
+            return;
+          }
 
-function BoardCard() {
-  return (
-    <div className="w-full flex flex-col rounded-md border-border bg-card p-3 gap-3">
-      <div className="flex items-start justify-between gap-6">
-        <h1 className="text-sm font-medium">Write API Documentation</h1>
-        <button
-          type="button"
-          aria-label="More task actions"
-          className="mt-2 rounded-md p-1 text-foreground transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
-        >
-          <Ellipsis size={14} aria-hidden="true" />
-        </button>
-      </div>
+          const task = tasks[activeStatus].find((t) => t.id === taskId);
+          if (!task) {
+            console.error(`task ${taskId} not found`);
+            return;
+          }
+          task.status = newStatus;
 
-      <div className="flex flex-col gap-10 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-1">
-          <Avatar className="h-5 w-5">
-            <AvatarImage src="https://github.com/shadcn.png" alt="@shadcn" />
-          </Avatar>
-          <span className="text-xs font-medium">Admin</span>
-        </div>
+          const newTasks = {
+            ...tasks,
+            [newStatus]: [...tasks[newStatus], task],
+            [activeStatus]: tasks[activeStatus].filter((t) => t.id !== taskId),
+          };
 
-        <div className="flex items-center py-0.5 px-2 self-start rounded-full bg-destructive/10 text-destructive">
-          <CalendarDays size={10} aria-hidden="true" />
-          <span className="text-xs font-medium">29 Jul</span>
-        </div>
-      </div>
-
-      <div className="flex flex-wrap">
-        {['Deployment', 'Deployment'].map((label, index) => (
-          <span
-            key={`${label}-${index}`}
-            className="inline-flex items-center gap-1 rounded-full bg-muted px-2 py-0.5 text-xs font-medium"
-          >
-            <Tag size={12} strokeWidth={2} aria-hidden="true" />
-            {label}
-          </span>
-        ))}
-      </div>
+          setTasks(newTasks);
+        }}
+      >
+        <BoardColumn id="todo" label="To Do" tasks={tasks.todo} />
+        <BoardColumn id="in_progress" label="In Progress" tasks={tasks.in_progress} />
+        <BoardColumn id="done" label="Done" tasks={tasks.done} />
+        <BoardColumn id="in_review" label="In Review" tasks={tasks.in_review} />
+        <BoardColumn id="backlog" label="Backlog" tasks={tasks.backlog} />
+      </DragDropProvider>
     </div>
   );
 }

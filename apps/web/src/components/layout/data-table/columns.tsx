@@ -20,14 +20,13 @@ import {
   Trash,
 } from 'lucide-react';
 import { Avatar, AvatarImage } from '@/components/ui/avatar';
-import { TaskPriority } from '@/features/tasks/tasks.types';
+import { Priority } from '@/features/tasks/tasks.types';
 import { cn } from '@/lib/utils';
-import { ProjectPriority } from '@/features/projects/projects.types';
 
 type TableData = {
   title: string;
   dueDate: string;
-  priority: TaskPriority | ProjectPriority;
+  priority: Priority;
 };
 
 // Use `accessor` for data columns and `display` for columns without one.
@@ -55,19 +54,19 @@ export const columns = columnHelper.columns([
       let color = 'text-primary';
       let Icon = SignalZero;
       switch (ctx.row.original.priority) {
-        case TaskPriority.LOW:
+        case 'low':
           color = 'text-gray-400';
           Icon = SignalLow;
           break;
-        case TaskPriority.MEDIUM:
+        case 'medium':
           color = 'text-yellow-500';
           Icon = SignalMedium;
           break;
-        case TaskPriority.HIGH:
+        case 'high':
           color = 'text-orange-500';
           Icon = SignalHigh;
           break;
-        case TaskPriority.URGENT:
+        case 'urgent':
           color = 'text-red-500';
           Icon = Signal;
           break;
